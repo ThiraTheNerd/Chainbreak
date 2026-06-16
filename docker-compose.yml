@@ -1,0 +1,195 @@
+services:
+
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: chainbreak-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - client
+      - server
+    networks:
+      - chainbreak-default
+    restart: unless-stopped
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: chainbreak-client
+    volumes:
+      - ./client:/app
+      - client-node-modules:/app/node_modules
+    networks:
+      - chainbreak-default
+    restart: unless-stopped
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: chainbreak-server
+    volumes:
+      - ./server:/app
+      - server-node-modules:/app/node_modules
+      - /var/run/docker.sock:/var/run/docker.sock
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - chainbreak-default
+      - localstack-net
+      - challenge-1-net
+      - challenge-2-net
+    restart: unless-stopped
+
+  zap:
+    image: ghcr.io/zaproxy/zaproxy:stable
+    container_name: chainbreak-zap
+    command: >-
+      zap.sh -daemon -host 0.0.0.0 -port 8080
+      -config api.key=${ZAP_API_KEY}
+      -config api.addrs.addr.name=.*
+      -config api.addrs.addr.regex=true
+    environment:
+      ZAP_API_KEY: ${ZAP_API_KEY}
+      _JAVA_OPTIONS: "-Xmx3g"
+    deploy:
+      resources:
+        limits:
+          memory: 4096M
+    networks:
+      - chainbreak-default
+    restart: unless-stopped
+
+  db:
+    image: mysql:8.0
+    container_name: chainbreak-db
+    environment:
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASS}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASS}
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./server/db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    ports:
+      - "3306:3306"
+    networks:
+      - chainbreak-default
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "${DB_USER}", "--password=${DB_PASS}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+
+  localstack:
+    image: localstack/localstack:3
+    container_name: chainbreak-localstack
+    environment:
+      # Community-tier LocalStack effectively lazy-loads any AWS service on
+      # first use regardless of SERVICES, but it's kept explicit here for
+      # clarity about what the cloud layer actually targets. STS added
+      # (cloud-layer STAGE 1) alongside the S3/IAM already here —
+      # get-caller-identity is the first real AWS call a learner will make.
+      - SERVICES=s3,iam,sts,secretsmanager,lambda
+      - DEFAULT_REGION=us-east-1
+      - AWS_DEFAULT_REGION=us-east-1
+    volumes:
+      - ./LocalStack:/etc/localstack/init/ready.d
+      - localstack-data:/var/lib/localstack
+    networks:
+      - localstack-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 8
+      start_period: 30s
+
+  # Not run as part of `docker compose up` — this only exists so the image
+  # gets built and tagged. `docker.service.js` provision() spins up fresh
+  # per-session containers FROM this tag directly via the Docker Engine API
+  # (dockerode), not via compose, so there's nothing useful for compose to
+  # keep "up" here. The `build-only` profile keeps it out of a bare `up`/
+  # `build`; name it explicitly to build it: `docker compose build workstation`.
+  workstation:
+    build:
+      context: ./server/docker/workstation
+      dockerfile: Dockerfile
+    image: chainbreak-workstation
+    profiles: ["build-only"]
+
+  challenge-1:
+    build:
+      context: ./challenges/challenge-1/web
+      dockerfile: Dockerfile
+    container_name: chainbreak-challenge-1
+    hostname: web-challenge-1
+    privileged: true
+    environment:
+      - FLAG_1=flag{sqli_owasp_bypass}
+      - FLAG_2=flag{sqli_docker_escape}
+      - FLAG_3=flag{sqli_aws_iam_exfil}
+      - AWS_ACCESS_KEY_ID=AKIA-ACME-DEPLOY-BOT
+      - AWS_SECRET_ACCESS_KEY=acme-deploy-bot-secret
+      - AWS_DEFAULT_REGION=us-east-1
+      - AWS_ENDPOINT_URL=http://localstack:4566
+    networks:
+      - challenge-1-net
+      - localstack-net
+    restart: unless-stopped
+    depends_on:
+      localstack:
+        condition: service_healthy
+
+  challenge-2:
+    build:
+      context: ./challenges/challenge-2
+      dockerfile: Dockerfile
+    container_name: chainbreak-challenge-2
+    hostname: web-challenge-2
+    environment:
+      - AWS_ACCESS_KEY_ID=ch2-victim-access-key
+      - AWS_SECRET_ACCESS_KEY=ch2-victim-secret
+      - AWS_DEFAULT_REGION=us-east-1
+      - LOCALSTACK_URL=http://localstack:4566
+      - FLAG_1=flag{idor_profile_exposed}
+      - FLAG_2=flag{idor_docker_socket}
+      - FLAG_3=flag{idor_s3_exfil}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - challenge-2-net
+      - localstack-net
+    restart: unless-stopped
+
+networks:
+  chainbreak-default:
+    driver: bridge
+  localstack-net:
+    driver: bridge
+    # Explicit, stable name — NOT compose's auto-generated
+    # `<project>_localstack-net`, which would change if the compose project
+    # name ever changes. server/services/docker.service.js's provision()
+    # connects each session's workstation container to this exact network
+    # name by string, post-create, so it must stay predictable regardless of
+    # how compose is invoked (see config.docker.localstackNetwork).
+    name: chainbreak-localstack-net
+  challenge-1-net:
+    driver: bridge
+  challenge-2-net:
+    driver: bridge
+
+volumes:
+  mysql-data:
+  localstack-data:
+  client-node-modules:
+  server-node-modules:
