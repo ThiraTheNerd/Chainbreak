@@ -1,0 +1,28 @@
+### Variables (File Scope)
+@baseUrl = http://localhost:3000/api
+
+### 1. Register a New User
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "username": "c7534084",
+  "email": "mercy@test.com",
+  "password": "mercy1234!",
+  "confirmPassword": "mercy1234!"
+}
+### 1. Authenticate / Login User
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "alice@test.com",
+  "password": "Alice1234!"
+}
+
+###
+
+### 2. Fetch All Cybersecurity Challenges
+GET {{baseUrl}}/challenges
+Accept: application/json
