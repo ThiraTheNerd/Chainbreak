@@ -1,0 +1,16 @@
+{
+  "name": "chainbreak-challenge-1",
+  "version": "1.0.0",
+  "description": "ChainBreak Challenge 1 — SQL Injection (INTENTIONALLY VULNERABLE)",
+  "main": "app.js",
+  "type": "module",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^9.4.3",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2"
+  }
+}
