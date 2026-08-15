@@ -1,33 +1,3 @@
-"""
-learning_gain.py
-================
-Learning-gain analysis for the ChainBreak evaluation study (RQ1).
-
-This module computes learning gain from paired pre/post assessment data and runs
-the appropriate inferential statistics. It is written to be run on REAL participant
-data. It makes no assumption that the result will be favourable: it reports whatever
-the data shows, including a weak, null, or negative result.
-
-Metrics computed
-----------------
-* Descriptive statistics (mean/SD pre, post, raw gain), overall and per domain.
-* Hake's normalised gain  g = (post - pre) / (max - pre)   per participant and mean.
-* Normality check (Shapiro-Wilk) to choose the correct paired test.
-* Paired significance test: paired t-test if differences are ~normal, otherwise
-  Wilcoxon signed-rank (appropriate for small N / non-normal data).
-* Effect size: Cohen's d for paired samples (with the paired-correlation correction),
-  reported alongside significance because with small N significance alone is weak.
-* Confidence / self-efficacy gain (same treatment) if that data is present.
-
-Expected input (tidy CSV)
--------------------------
-One row per participant, with at minimum:
-    participant_id, phase in {pre, post}, and score columns.
-See load_scores() for the exact schema and expected_schema() for a printable spec.
-
-Author: Mercy Thira Githinji — MSc Cybersecurity, Leeds Beckett University
-"""
-
 from __future__ import annotations
 import pandas as pd
 import numpy as np

@@ -1,30 +1,3 @@
-"""
-run_analysis.py — end-to-end learning-gain analysis + figures.
-
-Usage:
-    python run_analysis.py <path_to_scores.csv>
-    python run_analysis.py --from-db
-
-Produces, alongside the CSV:
-    - console report (descriptives, normalised gain, significance, effect size)
-    - results_summary.csv  (the per-domain table, ready for the dissertation)
-    - fig_prepost.png      (mean pre vs post by domain, with error bars)
-    - fig_gain_hist.png    (distribution of per-participant normalised gain)
-    - fig_participant_gain.png (per-participant raw gain, sorted)
-
-Run it on REAL exported data. The numbers it prints are exactly what your data
-shows — favourable or not.
-
---from-db loads REAL data from the ChainBreak MySQL `assessments` table via
-db_loader.py (anonymised before it ever reaches this script — see
-analysis/README.md). If fewer than 2 participants have a complete real
-pre+post pair yet, it says so and exits WITHOUT writing results_summary.csv
-or any figures, rather than silently substituting synthetic data — a real
-run must never be confused with a pipeline test. To exercise the pipeline
-before real data exists, run make_synthetic_data.py and pass one of its
-_SYNTHETIC_*.csv files explicitly instead.
-"""
-
 import argparse
 import sys
 import numpy as np

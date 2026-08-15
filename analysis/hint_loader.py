@@ -1,21 +1,3 @@
-"""
-hint_loader.py
-===============
-Loads REAL hint-usage telemetry from the ChainBreak MySQL `hint_unlocks`
-table for RQ3 (how AI-assisted hint usage relates to learners' progression
-and perceived learning).
-
-Reuses db_loader.py's DB connection and participant-code anonymisation
-(`_connect()`, `_anonymise()`) rather than duplicating credentials or
-re-deriving a second mapping — a participant's code here is IDENTICAL to
-their code in the RQ1 assessment data (same shared participant_map.json),
-which is what makes relating hint usage to learning gain meaningful at all.
-
-No `hint_text` is read — it can contain the actual hint content, and RQ3
-only needs the behavioural telemetry (who, which challenge/layer, what
-tier, what it cost, whether Claude or the fallback served it, when).
-"""
-
 from __future__ import annotations
 import pandas as pd
 

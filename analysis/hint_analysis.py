@@ -1,34 +1,3 @@
-"""
-hint_analysis.py
-==================
-RQ3 — how AI-assisted hint usage relates to learners' progression and
-perceived learning.
-
-CRITICAL FRAMING: this analysis is EXPLORATORY and DESCRIPTIVE, not causal.
-The study has no hint/no-hint control group and a small sample, so nothing
-here can show that hints caused, helped, or hurt learning — only what
-learners actually did (uptake, escalation depth, AI-vs-fallback source),
-and, where enough data exists, a descriptive association between hint
-usage and learning gain. Every place that association is reported — the
-console, the CSV, and the figure title — says so explicitly.
-
-Two parts:
-  1. Behavioural description, from real hint_unlocks telemetry only
-     (hint_loader.py — reuses db_loader.py's connection and anonymisation,
-     so a participant's code here matches their RQ1 assessment code).
-  2. A descriptive (non-causal) association between per-participant hint
-     usage and their RQ1 learning gain, reusing db_loader/learning_gain's
-     existing pre/post pairing — no scoring is reimplemented here.
-
-The qualitative side of RQ3 — what learners SAID about the hints — is
-analysed with thematic_analysis.py (RQ2's tool) using hint-focused codes.
-Nothing new is built for that; see analysis/README.md.
-
-Nothing here fabricates, imputes, or infers a data point. Empty/insufficient
-real data is reported plainly, with no figure or number invented to fill
-the gap.
-"""
-
 from __future__ import annotations
 from pathlib import Path
 

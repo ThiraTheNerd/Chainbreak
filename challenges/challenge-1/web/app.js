@@ -97,7 +97,7 @@ app.post('/login', (req, res) => {
 // Checks authentication (a valid JWT) but not authorization — there is no
 // `claims.role === 'admin'` check, so any logged-in user can list every
 // account.
-app.get('/api/users', (req, res) => {
+app.get('/users', (req, res) => {
   const claims = verifyBearer(req);
   if (!claims) {
     return res.status(401).json({ error: 'Missing or invalid token' });

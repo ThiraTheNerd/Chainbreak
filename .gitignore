@@ -44,6 +44,8 @@ data/
 scripts/
 commit_history.sh
 backup-before-scan.sql
+docs/
+
 
 
 # Snowpack dependency directory (https://snowpack.dev/)
