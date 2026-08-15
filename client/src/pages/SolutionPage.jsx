@@ -5,10 +5,7 @@ import { useSolutionUnlockStatus }   from '@/hooks/useSolutionUnlock'
 import { getSolution }               from '@/lib/solutions'
 import { SolutionWalkthrough }       from '@/components/solution/SolutionWalkthrough'
 
-// A secondary path alongside MissionBrief's in-panel Solution tab (the
-// primary one, which keeps the terminal visible) — both share the same
-// SolutionWalkthrough renderer and the same access gating, so this page
-// only adds page-level chrome around it.
+
 export function SolutionPage() {
   const { id } = useParams()
   const navigate = useNavigate()

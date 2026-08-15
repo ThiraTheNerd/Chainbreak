@@ -5,7 +5,7 @@ export async function submitFlag(req, res) {
   const { challengeId, flag } = req.body || {};
   if (!challengeId || !flag) throw new BadRequestError('challengeId and flag are required');
  
-  const result = await flagService.submitFlag({
+  const result = await flagService.submitFlagForChallenge({
     userId: req.user.id,
     challengeId: Number(challengeId),
     submittedFlag: flag,

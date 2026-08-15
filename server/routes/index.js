@@ -9,6 +9,7 @@ import hintRoutes from './hints.js';
 import securityRoutes from './security.js';
 import progressRoutes from './progress.js';
 import adminRoutes from './admin.js';
+import consentRoutes from './consent.js';
 
 
 const router = Router();
@@ -24,6 +25,7 @@ router.use('/hints', hintRoutes);
 router.use('/security', securityRoutes);
 router.use('/progress', progressRoutes);
 router.use('/admin', adminRoutes);
+router.use('/consent', consentRoutes);
 
 export default router;
  

@@ -2,6 +2,7 @@ import { randomUUID, randomBytes } from 'node:crypto';
 import config from '../config/env.js';
 import * as challenges from '../repositories/challenge.repository.js';
 import * as sessions from '../repositories/session.repository.js';
+import * as learnerSessions from '../repositories/learner-session.repository.js';
 import * as dockerService from './docker.service.js';
 import { AppError } from '../utils/errors.js';
 
@@ -61,6 +62,11 @@ export async function stopChallenge(user, sessionId) {
   if (!session || session.user_id !== user.id) throw new AppError('Session not found', 404);
 
   if (session.status === 'running' || session.status === 'provisioning') {
+    // Ended before teardown so the reason recorded is the true one
+    // ('manual') rather than whatever the resulting pty-exit/disconnect
+    // cascade would otherwise record — see learner-session.repository.js's
+    // end() guard for why the later calls become harmless no-ops.
+    await learnerSessions.endAllActiveForEnvironment(sessionId, 'manual');
     await dockerService.teardown(session); // killing the workstation ends the pty, closing the socket itself
     await sessions.markExpired(sessionId);
   }

@@ -3,22 +3,53 @@ import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import config from '../config/env.js';
 import logger from '../utils/logger.js';
+import pool from '../db/connection.js';
 import * as userRepository from '../repositories/user.repository.js';
 import * as passwordResetRepository from '../repositories/password-reset.repository.js';
+import * as inviteRepository from '../repositories/invite.repository.js';
 import { ConflictError, UnauthorizedError, BadRequestError } from '../utils/errors.js';
 
 const RESET_TOKEN_TTL_MS = 30 * 60 * 1000;
 
 const hashToken = (token) => crypto.createHash('sha256').update(token).digest('hex');
  
-export async function register({ username, email, password }) {
+// Registration is invite-only: there is no path to an account without a
+// valid, unused, unexpired, unrevoked code (see server/controllers/auth.controller.js,
+// which rejects a missing code before this is even called). 
+export async function register({ username, email, password, inviteCode }) {
+  if (!inviteCode) throw new BadRequestError('An invite code is required to register');
+
   const existing = await userRepository.findByEmail(email);
   if (existing) throw new ConflictError('An account with that email already exists');
- 
+
   const passwordHash = await bcrypt.hash(password, config.security.bcryptRounds);
-  const user = await userRepository.create({ username, email, passwordHash });
- 
-  return { user, token: signToken(user) };
+
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+
+    const invite = await inviteRepository.lockByCode(conn, inviteCode);
+
+    // Deliberately the SAME error for "no such code", "already used", and
+    // "revoked/expired" — telling them apart would let an attacker enumerate
+    // which codes exist or have been redeemed, which is exactly the signal
+    // an invite-gate exists to deny them.
+    const isInvalid = !invite
+      || invite.status !== 'unused'
+      || (invite.expires_at && new Date(invite.expires_at) <= new Date());
+    if (isInvalid) throw new BadRequestError('Invalid or unavailable invite code');
+
+    const user = await userRepository.create({ username, email, passwordHash }, conn);
+    await inviteRepository.markUsed(conn, invite.id, user.id);
+
+    await conn.commit();
+    return { user, token: signToken(user) };
+  } catch (err) {
+    await conn.rollback();
+    throw err;
+  } finally {
+    conn.release();
+  }
 }
  
 export async function login({ email, password }) {

@@ -2,7 +2,7 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, Trophy, User, Lightbulb,
   ClipboardList, Component, Settings, LogOut,
-  Link2Off, ShieldAlert, FlaskConical,
+  Link2Off, ShieldAlert, FlaskConical, Ticket,
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 
@@ -88,6 +88,17 @@ export function Sidebar() {
             >
               <FlaskConical size={16} />
               Research Analytics
+            </NavLink>
+            <NavLink
+              to="/admin/invites"
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2 rounded-lg text-sm
+                 transition-colors relative
+                 ${isActive ? 'text-warning bg-warning/10' : 'text-text-2 hover:text-warning hover:bg-warning/5'}`
+              }
+            >
+              <Ticket size={16} />
+              Invite codes
             </NavLink>
             <NavLink
               to="/admin"

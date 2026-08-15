@@ -4,9 +4,7 @@ import { useMutation } from '@tanstack/react-query'
 import { Link2Off } from 'lucide-react'
 import api from '@/services/api'
 
-// The backend builds the link from its own configured CLIENT_ORIGIN, which
-// may not match the browser's actual origin (e.g. behind a reverse proxy)
-// — so route via the path/query only, not the absolute URL.
+
 function toRelativePath(absoluteUrl) {
   const url = new URL(absoluteUrl)
   return `${url.pathname}${url.search}`

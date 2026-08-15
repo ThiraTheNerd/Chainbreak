@@ -3,9 +3,11 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AuthProvider } from '@/context/AuthContext'
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
 import { AdminRoute }     from '@/components/layout/AdminRoute'
+import { ConsentGate }    from '@/components/layout/ConsentGate'
 import { AppLayout }      from '@/components/layout/AppLayout'
 import { Login }          from '@/pages/Login'
 import { Register }       from '@/pages/Register'
+import { Consent }        from '@/pages/Consent'
 import { ForgotPassword } from '@/pages/ForgotPassword'
 import { ResetPassword }  from '@/pages/ResetPassword'
 import { Dashboard }      from '@/pages/Dashboard'
@@ -16,6 +18,7 @@ import { Assessment }     from '@/pages/Assessment'
 import { SecurityCentre } from '@/pages/SecurityCentre'
 import { Progress }       from '@/pages/Progress'
 import { ResearchAnalytics } from '@/pages/ResearchAnalytics'
+import { AdminInvites }     from '@/pages/AdminInvites'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -50,16 +53,35 @@ export default function App() {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password"  element={<ResetPassword />} />
 
+            {/* Authenticated-only, deliberately NOT wrapped in ConsentGate —
+                this is where consent gets recorded, so gating it would trap
+                a not-yet-consented participant with nowhere to go. */}
+            <Route path="/consent" element={
+              <ProtectedRoute>
+                <Consent />
+              </ProtectedRoute>
+            } />
+
+            {/* Every route below is study content — ConsentGate (inside
+                ProtectedRoute) redirects to /consent unless the account is
+                exempt (admin / original cohort) or has completed consent.
+                This mirrors, in the UI, what the server's requireConsent
+                middleware already enforces on every study API call — see
+                server/middleware/consent.js. */}
             <Route path="/dashboard" element={
               <ProtectedRoute>
-                <AppLayout><Dashboard /></AppLayout>
+                <ConsentGate>
+                  <AppLayout><Dashboard /></AppLayout>
+                </ConsentGate>
               </ProtectedRoute>
             } />
 
             {/* Challenge page has its own top bar — no AppLayout */}
             <Route path="/challenge/:id" element={
               <ProtectedRoute>
-                <ChallengePage />
+                <ConsentGate>
+                  <ChallengePage />
+                </ConsentGate>
               </ProtectedRoute>
             } />
 
@@ -67,40 +89,54 @@ export default function App() {
                 from MissionBrief's (locked) Solution tab */}
             <Route path="/challenge/:id/solution" element={
               <ProtectedRoute>
-                <SolutionPage />
+                <ConsentGate>
+                  <SolutionPage />
+                </ConsentGate>
               </ProtectedRoute>
             } />
 
             <Route path="/scoreboard" element={
               <ProtectedRoute>
-                <AppLayout><Scoreboard /></AppLayout>
+                <ConsentGate>
+                  <AppLayout><Scoreboard /></AppLayout>
+                </ConsentGate>
               </ProtectedRoute>
             } />
             <Route path="/assessment" element={
               <ProtectedRoute>
-                <AppLayout><Assessment /></AppLayout>
+                <ConsentGate>
+                  <AppLayout><Assessment /></AppLayout>
+                </ConsentGate>
               </ProtectedRoute>
             } />
 
             <Route path="/progress" element={
               <ProtectedRoute>
-                <AppLayout><Progress /></AppLayout>
+                <ConsentGate>
+                  <AppLayout><Progress /></AppLayout>
+                </ConsentGate>
               </ProtectedRoute>
             } />
 
             <Route path="/hints" element={
               <ProtectedRoute>
-                <AppLayout><Placeholder label="Hints used — Phase 5" /></AppLayout>
+                <ConsentGate>
+                  <AppLayout><Placeholder label="Hints used — Phase 5" /></AppLayout>
+                </ConsentGate>
               </ProtectedRoute>
             } />
             <Route path="/components" element={
               <ProtectedRoute>
-                <AppLayout><Placeholder label="Components — coming soon" /></AppLayout>
+                <ConsentGate>
+                  <AppLayout><Placeholder label="Components — coming soon" /></AppLayout>
+                </ConsentGate>
               </ProtectedRoute>
             } />
             <Route path="/settings" element={
               <ProtectedRoute>
-                <AppLayout><Placeholder label="Settings — coming soon" /></AppLayout>
+                <ConsentGate>
+                  <AppLayout><Placeholder label="Settings — coming soon" /></AppLayout>
+                </ConsentGate>
               </ProtectedRoute>
             } />
             <Route path="/admin/*" element={
@@ -116,6 +152,11 @@ export default function App() {
             <Route path="/admin/analytics" element={
               <AdminRoute>
                 <AppLayout><ResearchAnalytics /></AppLayout>
+              </AdminRoute>
+            } />
+            <Route path="/admin/invites" element={
+              <AdminRoute>
+                <AppLayout><AdminInvites /></AppLayout>
               </AdminRoute>
             } />
 

@@ -1,12 +1,3 @@
--- Migration: add the solution_unlocks table (pay-to-unlock solution
--- walkthroughs, one-time per user per module).
---
--- See the CREATE TABLE comment in server/db/schema.sql for the full design
--- rationale (why docker_image not challenge_id, why cost is stored per-row).
---
--- Unlike the assessments migrations, this needs no information_schema/
--- PREPARE dance — CREATE TABLE IF NOT EXISTS is valid, idempotent, native
--- MySQL syntax (only ALTER TABLE ... ADD/DROP COLUMN IF NOT EXISTS is not).
 
 USE chainbreak;
 

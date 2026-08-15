@@ -1,12 +1,8 @@
-// Reuses existing scoring/grouping logic rather than recomputing it:
-// score.service.getMyScore() (same XP the Dashboard and leaderboard show)
-// and challenge.repository.findAll() (same per-challenge solved/layer state
-// the kill-chain graph reads) — this only adds the extra shapes (time
-// series, category/hint-tier breakdowns, last-active).
 
 import * as scoreService from './score.service.js';
 import * as challengeRepository from '../repositories/challenge.repository.js';
 import * as submissionRepository from '../repositories/submission.repository.js';
+import * as completionRepository from '../repositories/completion.repository.js';
 import * as hintRepository from '../repositories/hint.repository.js';
 import * as sessionRepository from '../repositories/session.repository.js';
 
@@ -20,7 +16,7 @@ export async function getMyProgress(userId) {
   const [score, challenges, history, hintTiers, lastSubmissionAt, lastSessionAt] = await Promise.all([
     scoreService.getMyScore(userId),
     challengeRepository.findAll({ userId }),
-    submissionRepository.solveHistory(userId),
+    completionRepository.history(userId),
     hintRepository.tierBreakdownForUser(userId),
     submissionRepository.lastActivityAt(userId),
     sessionRepository.lastSessionAt(userId),

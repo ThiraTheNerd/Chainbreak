@@ -8,13 +8,6 @@ export async function findUnlock(userId, dockerImage) {
   return rows[0] || null;
 }
 
-/**
- * Records a one-time unlock. The UNIQUE(user_id, docker_image) constraint is
- * what actually enforces "one-time" — two concurrent unlock attempts (e.g. a
- * double-click) race on the same INSERT, and the loser hits ER_DUP_ENTRY
- * instead of charging the user twice. That failure is caught here and
- * treated as "already unlocked" rather than propagated as an error.
- */
 export async function recordUnlock({ userId, dockerImage, cost }) {
   try {
     await pool.execute(

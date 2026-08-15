@@ -4,23 +4,50 @@ CREATE DATABASE IF NOT EXISTS chainbreak
 
 USE chainbreak;
 
+
 CREATE TABLE IF NOT EXISTS users (
   id            INT UNSIGNED NOT NULL AUTO_INCREMENT,
   username      VARCHAR(50)  NOT NULL,
   email         VARCHAR(255) NOT NULL,
   password_hash VARCHAR(255) NOT NULL,
   role          ENUM('participant','admin') NOT NULL DEFAULT 'participant',
+  cohort        ENUM('original','remote') NOT NULL DEFAULT 'remote',
   created_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   UNIQUE KEY uq_users_email (email)
 );
 
--- Forgot-password flow. Stores only a SHA-256 hash of the reset token —
--- never the raw token — so a leaked row (backup, SQL injection dump) can't
--- be replayed; the raw token exists only in the emailed/logged reset link.
--- One row per requested reset; `used_at` marks it consumed so a token
--- cannot be replayed after a successful reset. See
--- server/services/auth.service.js for expiry (30 min) and single-use logic.
+CREATE TABLE IF NOT EXISTS consent_records (
+  id                      INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  user_id                 INT UNSIGNED NOT NULL,
+  consented               BOOLEAN      NOT NULL DEFAULT FALSE,
+  consent_version         VARCHAR(50)  NOT NULL,  -- which PIS/consent wording was shown
+  consent_items           JSON         NOT NULL,  -- { itemKey: true|false, ... } — mirrors the paper form's tick-boxes
+  audio_recording_consent ENUM('consented','declined','not_applicable') NOT NULL,
+  typed_name               VARCHAR(255) NOT NULL,
+  consented_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  withdrawn_at            TIMESTAMP    NULL,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_consent_user (user_id),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS invite_codes (
+  id              INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  code            VARCHAR(64)  NOT NULL,
+  label           VARCHAR(255) NULL,          -- e.g. a participant reference code, not their name
+  status          ENUM('unused','used','revoked') NOT NULL DEFAULT 'unused',
+  created_by      INT UNSIGNED NOT NULL,      -- admin user id who generated it
+  created_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  expires_at      TIMESTAMP    NULL,
+  used_at         TIMESTAMP    NULL,
+  used_by_user_id INT UNSIGNED NULL,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_invite_codes_code (code),
+  FOREIGN KEY (created_by)      REFERENCES users(id) ON DELETE RESTRICT,
+  FOREIGN KEY (used_by_user_id) REFERENCES users(id) ON DELETE SET NULL
+);
+
 CREATE TABLE IF NOT EXISTS password_resets (
   id         INT UNSIGNED NOT NULL AUTO_INCREMENT,
   user_id    INT UNSIGNED NOT NULL,
@@ -51,19 +78,6 @@ CREATE TABLE IF NOT EXISTS challenges (
   UNIQUE KEY uq_challenges_title (title)
 );
 
-CREATE TABLE IF NOT EXISTS submissions (
-  id           INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  user_id      INT UNSIGNED NOT NULL,
-  challenge_id INT UNSIGNED NOT NULL,
-  correct      TINYINT(1)   NOT NULL DEFAULT 0,
-  submitted_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (id),
-  KEY idx_submissions_user (user_id),
-  KEY idx_submissions_challenge (challenge_id),
-  CONSTRAINT fk_sub_user      FOREIGN KEY (user_id)      REFERENCES users(id)      ON DELETE CASCADE,
-  CONSTRAINT fk_sub_challenge FOREIGN KEY (challenge_id) REFERENCES challenges(id) ON DELETE CASCADE
-);
-
 CREATE TABLE IF NOT EXISTS sessions (
   id                       CHAR(36)     NOT NULL,        -- UUID (crypto.randomUUID)
   user_id                  INT UNSIGNED NOT NULL,        -- UNSIGNED to match users.id
@@ -85,20 +99,63 @@ CREATE TABLE IF NOT EXISTS sessions (
     FOREIGN KEY (challenge_id) REFERENCES challenges (id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
--- Attempts-log model: every submission is its own row, nothing is ever
--- overwritten (previously UNIQUE(user_id, type) + ON DUPLICATE KEY UPDATE
--- meant a second 'pre' or 'post' submission silently destroyed the first —
--- unacceptable for a pre/post research study). attempt_number = 1 is the
--- CANONICAL attempt for analysis — see server/routes/assessment.js.
--- Existing databases: apply server/db/migrate_assessments_attempts_log.sql
--- (this CREATE TABLE only affects a fresh install).
---
--- confidence_ratings / sus_responses / sus_score: two additional research
--- instruments carried on the SAME row as the knowledge answers (not a
--- separate table) so the attempts-log model above covers them for free.
--- confidence_ratings is populated on both 'pre' and 'post' rows; sus_* only
--- on 'post' rows (SUS is administered post-session only). Existing
--- databases: apply server/db/migrate_assessment_instruments.sql.
+CREATE TABLE IF NOT EXISTS learner_sessions (
+  id                     CHAR(36)     NOT NULL,
+  environment_session_id CHAR(36)     NOT NULL,
+  user_id                INT UNSIGNED NOT NULL,
+  connected_at           TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  last_activity_at       TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  ended_at               TIMESTAMP    NULL DEFAULT NULL,
+  end_reason             ENUM('disconnect','expired','pty_exit','server_shutdown','manual') NULL DEFAULT NULL,
+  status                 ENUM('active','ended') NOT NULL DEFAULT 'active',
+  PRIMARY KEY (id),
+  KEY idx_learner_sessions_env  (environment_session_id, status),
+  KEY idx_learner_sessions_user (user_id, status),
+  CONSTRAINT fk_learner_sessions_env
+    FOREIGN KEY (environment_session_id) REFERENCES sessions (id) ON DELETE CASCADE,
+  CONSTRAINT fk_learner_sessions_user
+    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+
+CREATE TABLE IF NOT EXISTS submissions (
+  id                 INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  user_id            INT UNSIGNED NOT NULL,
+  challenge_id       INT UNSIGNED NOT NULL,
+  learner_session_id CHAR(36)     NULL DEFAULT NULL,
+  correct            TINYINT(1)   NOT NULL DEFAULT 0,
+  attempt_source     ENUM('user_attempt','challenge_resolution') NOT NULL DEFAULT 'user_attempt',
+  submitted_at       TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_submissions_user (user_id),
+  KEY idx_submissions_challenge (challenge_id),
+  KEY idx_submissions_learner_session (learner_session_id),
+  CONSTRAINT fk_sub_user      FOREIGN KEY (user_id)      REFERENCES users(id)      ON DELETE CASCADE,
+  CONSTRAINT fk_sub_challenge FOREIGN KEY (challenge_id) REFERENCES challenges(id) ON DELETE CASCADE,
+  CONSTRAINT fk_submissions_learner_session
+    FOREIGN KEY (learner_session_id) REFERENCES learner_sessions(id) ON DELETE SET NULL
+);
+
+
+CREATE TABLE IF NOT EXISTS completions (
+  id                 INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id            INT UNSIGNED NOT NULL,
+  challenge_id       INT UNSIGNED NOT NULL,
+  learner_session_id CHAR(36)     NULL DEFAULT NULL,
+  submission_id      INT UNSIGNED NOT NULL,
+  points_awarded     INT UNSIGNED NOT NULL,
+  completed_at       TIMESTAMP    NOT NULL,
+  CONSTRAINT fk_completions_user
+    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+  CONSTRAINT fk_completions_challenge
+    FOREIGN KEY (challenge_id) REFERENCES challenges (id) ON DELETE CASCADE,
+  CONSTRAINT fk_completions_learner_session
+    FOREIGN KEY (learner_session_id) REFERENCES learner_sessions (id) ON DELETE SET NULL,
+  CONSTRAINT fk_completions_submission
+    FOREIGN KEY (submission_id) REFERENCES submissions (id) ON DELETE RESTRICT,
+  UNIQUE KEY uq_completion_user_challenge (user_id, challenge_id)
+) ENGINE=InnoDB;
+
 CREATE TABLE IF NOT EXISTS assessments (
   id           INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   user_id      INT UNSIGNED NOT NULL,
@@ -116,19 +173,7 @@ CREATE TABLE IF NOT EXISTS assessments (
   KEY idx_user_type_attempt (user_id, type, attempt_number)
 );
 
--- Pay-to-unlock solution walkthroughs. One row per (user, module) — the
--- UNIQUE key is what makes the unlock genuinely ONE-TIME: a second unlock
--- attempt for the same module hits a duplicate-key error, which the
--- repository treats as "already unlocked" rather than charging again.
--- Keyed by docker_image (the module identifier already used by
--- client/src/lib/solutions.js and MissionBrief.jsx's OBJECTIVES_BY_IMAGE),
--- not challenge_id, since a module spans several challenge rows (web/
--- container/cloud) and the unlock covers the whole module's walkthrough at
--- once. `cost` is stored per-row (not just derived from current challenge
--- points) so a later change to a challenge's points doesn't retroactively
--- alter what a past unlock is understood to have cost — see
--- server/services/unlock.service.js for how cost is computed at unlock time
--- and how it's subtracted from score (server/repositories/submission.repository.js).
+
 CREATE TABLE IF NOT EXISTS solution_unlocks (
   id           INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   user_id      INT UNSIGNED NOT NULL,
@@ -139,18 +184,7 @@ CREATE TABLE IF NOT EXISTS solution_unlocks (
   UNIQUE KEY uq_user_module (user_id, docker_image)
 );
 
--- AI-generated progressive hints (server/services/hint.service.js). One row
--- per (user, challenge, tier) unlocked — same one-time-per-tier shape as
--- solution_unlocks above, but keyed to a single CHALLENGE (one flag), not a
--- whole module, since a hint is requested per-flag. `hint_text` stores the
--- actual generated (or fallback) content so it's shown identically on every
--- future visit without re-calling Claude. `source` distinguishes a real
--- Claude response from the pre-written fallback (used when the API errors,
--- times out, or ANTHROPIC_API_KEY isn't configured) — genuine research
--- signal for "did the AI actually respond." This table doubles as the
--- research log itself: which learner took which hint, at which tier, when,
--- for what cost — see server/repositories/hint.repository.js's
--- allHintReveals(), exposed at GET /api/hints/research (admin-only).
+
 CREATE TABLE IF NOT EXISTS hint_unlocks (
   id           INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   user_id      INT UNSIGNED NOT NULL,

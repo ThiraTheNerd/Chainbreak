@@ -1,13 +1,7 @@
 import { Flag, ChevronDown, Globe, Box, Cloud } from 'lucide-react'
 import { CodeBlock } from './CodeBlock'
 
-// Same layer colour convention as KillChainNode / LayerBadge / FlagStatusRow
-// (tailwind.config.js: layer-web/layer-container/layer-cloud). Every class
-// fragment below is written out in full (not built via string
-// concatenation) so Tailwind's content scanner can actually find and
-// generate it — `${border}/30` at runtime would never match anything since
-// the literal string "border-layer-web/30" wouldn't appear anywhere in the
-// source for the scanner to pick up.
+
 const LAYER_META = {
   web: {
     label: 'Web layer', icon: Globe,

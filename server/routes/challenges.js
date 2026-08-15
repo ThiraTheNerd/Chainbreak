@@ -3,10 +3,13 @@ import * as challengeController from '../controllers/challenge.controller.js';
 import * as sessionController from '../controllers/session.controller.js';
 import { authenticate } from '../middleware/auth.js';
 import { requireAdmin } from '../middleware/admin.js';
+import { requireConsent } from '../middleware/consent.js';
 import { rateLimit }    from '../middleware/rateLimit.js';
 
 const router = Router();
-router.use(authenticate);
+// requireConsent bypasses admins (see middleware/consent.js), so the
+// admin-only routes below (create/archive) are unaffected by this.
+router.use(authenticate, requireConsent);
 
 router.get('/', challengeController.listChallenges); // ?layer=owasp|docker|aws
 router.get('/:id', challengeController.getOne);
@@ -16,10 +19,7 @@ router.get('/:id/progress', challengeController.getProgress);
 router.get('/:id/solution-unlock', challengeController.getSolutionUnlockStatus);
 router.post('/:id/solution-unlock', challengeController.unlockSolution);
 
-// AI-generated progressive hints — one-time per (user, challenge, tier).
-// Rate-limited (not just cost-gated): the reveal endpoint calls the
-// Anthropic API and shouldn't be hammered even by someone who can afford
-// every tier of every flag.
+
 router.get('/:id/hints', challengeController.getHintStatus);
 router.post(
   '/:id/hints/:tier',

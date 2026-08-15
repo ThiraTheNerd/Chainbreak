@@ -1,11 +1,3 @@
--- Migration: add the password_resets table (forgot-password flow).
---
--- See the CREATE TABLE comment in server/db/schema.sql for the full design
--- rationale (why only a token hash is stored, why one row per request).
---
--- CREATE TABLE IF NOT EXISTS is valid, idempotent, native MySQL syntax —
--- same pattern as migrate_solution_unlocks.sql.
-
 USE chainbreak;
 
 CREATE TABLE IF NOT EXISTS password_resets (

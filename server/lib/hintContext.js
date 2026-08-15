@@ -1,21 +1,3 @@
-/**
- * Per-flag context for the AI hint system, keyed by `challenges.slug` (one
- * entry per flag, since a hint is requested for the specific flag a
- * learner is stuck on). Each entry has three fields:
- *   - `vulnerability`   — fed to Claude as the mechanism being exploited.
- *   - `solutionSummary` — fed to Claude as ground truth, but it is
- *                          instructed to never reveal this directly.
- *   - `fallback[1|2|3]` — pre-written, tier-calibrated hints used verbatim
- *                          whenever the Claude call fails, times out, or no
- *                          ANTHROPIC_API_KEY is configured, so a live study
- *                          session never breaks (1=conceptual nudge,
- *                          2=technique/direction, 3=near-explicit).
- *
- * sqli-iam-exfil (Challenge 1's cloud-layer flag) is intentionally absent —
- * that layer isn't built yet. ai.service.js falls back to a generic,
- * honest message for any slug not listed here.
- */
-
 export const HINT_CONTEXT = {
   'sqli-login': {
     vulnerability:

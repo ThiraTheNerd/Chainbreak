@@ -10,19 +10,17 @@ export async function hasSolved(userId, challengeId) {
   return rows.length > 0;
 }
 
-export async function record({ userId, challengeId, correct }) {
-  const [result] = await pool.query(
-    `INSERT INTO submissions (user_id, challenge_id, correct)
-     VALUES (:userId, :challengeId, :correct)`,
-    { userId, challengeId, correct: correct ? 1 : 0 }
+
+export async function record({ userId, challengeId, correct, learnerSessionId = null }, conn = pool) {
+  const [result] = await conn.query(
+    `INSERT INTO submissions (user_id, challenge_id, correct, learner_session_id)
+     VALUES (:userId, :challengeId, :correct, :learnerSessionId)`,
+    { userId, challengeId, correct: correct ? 1 : 0, learnerSessionId }
   );
   return { id: result.insertId };
 }
 
-// One row per solved challenge, at its first correct-submission timestamp —
-// the same dedup rule as scoreForUser() below (distinct solved challenge,
-// correct = 1) so a cumulative-XP series built from this never drifts from
-// the XP number shown elsewhere.
+
 export async function solveHistory(userId) {
   const [rows] = await pool.query(
     `SELECT c.id AS challenge_id, c.title, c.layer, c.category, c.points,

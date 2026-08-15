@@ -11,7 +11,7 @@
     "start": "node server.js",
     "dev": "node --watch server.js",
     "db:seed": "node db/seed.js",
-    "test": "node --test lib/securityCentre.test.mjs"
+    "test": "node --test lib/securityCentre.test.mjs services/flag.service.test.mjs"
   },
   "keywords": [
     "ctf",

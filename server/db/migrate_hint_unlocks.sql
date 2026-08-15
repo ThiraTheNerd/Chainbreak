@@ -1,11 +1,3 @@
--- Migration: add the hint_unlocks table (AI-generated progressive hints,
--- one-time-per-tier, same purchase-log shape as solution_unlocks).
---
--- See the CREATE TABLE comment in server/db/schema.sql for the full design
--- rationale. Like migrate_solution_unlocks.sql, this needs no
--- information_schema/PREPARE dance — CREATE TABLE IF NOT EXISTS is valid,
--- idempotent, native MySQL syntax.
-
 USE chainbreak;
 
 CREATE TABLE IF NOT EXISTS hint_unlocks (

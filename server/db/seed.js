@@ -65,14 +65,6 @@ async function seed() {
       network_alias:'web-challenge-1',
     },
     {
-      // Repurposed from the deferred host-escape placeholder (was
-      // 'sqli-container-escape' / flag{sqli_docker_escape}) into a real,
-      // buildable challenge: leaked AWS credentials planted at
-      // /root/.aws/credentials, root-only. The deferred HOST escape
-      // (a genuine container-to-host breakout) is not seeded anywhere
-      // right now — it needs real infra (a safe, isolated way to actually
-      // let a learner touch the host) that doesn't exist yet. Add it back
-      // as a NEW row/flag when that's built; do not reuse this slug/flag.
       slug:         'sqli-docker-misconfig',
       title:        'Container misconfiguration — leaked AWS credentials',
       description:  'As root inside the container, enumerate the filesystem. The container carries AWS credentials it should never have — find and read them.',
@@ -181,13 +173,6 @@ async function seed() {
     network_alias: 'web-challenge-2',
   },
   {
-    // Cloud layer — a two-hop credential-chaining escalation via Secrets
-    // Manager (distinct from Challenge 1's single-step S3 exfil). Seeded
-    // in LocalStack/seed-c2-cloud.py: the leaked c2-ci-runner creds
-    // (planted root-only in this container, see entrypoint.sh) can read
-    // one secret that itself contains stronger c2-admin credentials,
-    // which then reach the secret holding this flag. Flag content here
-    // must match LocalStack/seed-c2-cloud.py's FLAG_CONTENT exactly.
     slug: 'c2-cloud-privesc',
     title: 'Cloud Credential Escalation — CI to Prod',
     description: 'A leaked low-privilege CI deploy key can read an AWS Secrets Manager secret that itself contains stronger admin credentials. Chain the leaked creds through Secrets Manager — CI key, to a secret exposing prod admin creds, to the prod master secret — to reach the flag.',

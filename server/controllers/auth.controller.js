@@ -2,11 +2,11 @@ import * as authService from '../services/auth.service.js';
 import { BadRequestError } from '../utils/errors.js';
  
 export async function register(req, res) {
-  const { username, email, password } = req.body || {};
-  if (!username || !email || !password) {
-    throw new BadRequestError('username, email and password are required');
+  const { username, email, password, inviteCode } = req.body || {};
+  if (!username || !email || !password || !inviteCode) {
+    throw new BadRequestError('username, email, password and inviteCode are required');
   }
-  const { user, token } = await authService.register({ username, email, password });
+  const { user, token } = await authService.register({ username, email, password, inviteCode });
   res.status(201).json({ user, token });
 }
  

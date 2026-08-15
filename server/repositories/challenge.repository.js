@@ -7,8 +7,8 @@ export async function findAll({ userId, layer = null }) {
   const [rows] = await pool.execute(
     `SELECT c.id, c.slug, c.title, c.description, c.layer, c.points, c.difficulty,
             EXISTS (
-              SELECT 1 FROM submissions s
-               WHERE s.challenge_id = c.id AND s.user_id = ? AND s.correct = 1
+              SELECT 1 FROM completions co
+               WHERE co.challenge_id = c.id AND co.user_id = ?
             ) AS solved
        FROM challenges c
       WHERE (? IS NULL OR c.layer = ?)
@@ -45,14 +45,24 @@ export async function sumPointsByDockerImage(dockerImage) {
   return Number(rows[0].total);
 }
 
-// Internal use only: includes flag_hash for verification. Never send this to a client.
+
 export async function findByIdWithFlag(id) {
   const [rows] = await pool.execute(
-    `SELECT id, slug, title, layer, points, flag_hash
+    `SELECT id, slug, title, layer, points, flag_hash, docker_image
        FROM challenges WHERE id = ? LIMIT 1`,
     [id]
   );
   return rows[0] || null;
+}
+
+
+export async function findManyWithFlag(ids) {
+  if (!ids.length) return [];
+  const [rows] = await pool.query(
+    `SELECT id, slug, title, layer, points, flag_hash FROM challenges WHERE id IN (:ids)`,
+    { ids }
+  );
+  return rows;
 }
 
 export async function hasSolved(userId, challengeId) {

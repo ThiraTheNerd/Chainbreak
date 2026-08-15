@@ -1,8 +1,3 @@
-// Attack-sequence order for slugs where the server's natural query order
-// doesn't reflect chronological intent — challenge-1's docker layer has
-// three flags with the same points value, so a points-based sort ties and
-// falls back to row order, which puts sqli-ssh-pivot (added later, a much
-// higher id) last even though it's the first step of that attack chain.
 const ATTACK_SEQUENCE = [
   'sqli-login', 'sqli-broken-access',
   'sqli-ssh-pivot', 'sqli-privesc-root', 'sqli-docker-misconfig',

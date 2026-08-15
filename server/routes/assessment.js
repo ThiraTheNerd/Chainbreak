@@ -1,9 +1,10 @@
 import { Router } from 'express'
 import pool from '../db/connection.js'
 import { authenticate } from '../middleware/auth.js'
+import { requireConsent } from '../middleware/consent.js'
 
 const router = Router()
-router.use(authenticate)
+router.use(authenticate, requireConsent)
 
 // Answer key — maps questionId to correct answer letter
 // Questions 1-10: web security, 11-23: container, 24-33: cloud
@@ -74,11 +75,7 @@ router.post('/', async (req, res) => {
     if (questionId > 23)   cloud     += isCorrect ? 1 : 0
   }
 
-  // Attempts-log model: NEVER overwrite a prior submission. A pre/post
-  // research study cannot risk silently losing a participant's result to a
-  // resubmit — every attempt is its own row, numbered per (user_id, type)
-  // so the FIRST one (attempt_number = 1) stays identifiable as the
-  // canonical attempt for analysis (see GET /mine below).
+
   const [[{ nextAttempt }]] = await pool.execute(
     `SELECT COALESCE(MAX(attempt_number), 0) + 1 AS nextAttempt
        FROM assessments WHERE user_id = ? AND type = ?`,

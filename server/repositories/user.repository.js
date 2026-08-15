@@ -18,13 +18,14 @@ export async function findById(id) {
   return rows[0] || null;
 }
  
-export async function create({ username, email, passwordHash, role = 'participant' }) {
-  const [result] = await pool.query(
-    `INSERT INTO users (username, email, password_hash, role)
-     VALUES (:username, :email, :passwordHash, :role)`,
-    { username, email, passwordHash, role }
+
+export async function create({ username, email, passwordHash, role = 'participant', cohort = 'remote' }, conn = pool) {
+  const [result] = await conn.query(
+    `INSERT INTO users (username, email, password_hash, role, cohort)
+     VALUES (:username, :email, :passwordHash, :role, :cohort)`,
+    { username, email, passwordHash, role, cohort }
   );
-  return { id: result.insertId, username, email, role };
+  return { id: result.insertId, username, email, role, cohort };
 }
 
 export async function updatePassword(id, passwordHash) {

@@ -5,12 +5,7 @@ import { getHintContext } from '../lib/hintContext.js';
 import { generateHint } from './ai.service.js';
 import { NotFoundError, BadRequestError } from '../utils/errors.js';
 
-// Escalating, one-time-per-tier cost. Chosen to stay well under the
-// solution-unlock cost (340 XP for Challenge 1, 290 XP for Challenge 2 —
-// see server/services/unlock.service.js): all 3 tiers together cost 95 XP,
-// under a third of either module's full unlock price, so hints stay a
-// cheaper (if less complete) form of help than paying for the whole
-// walkthrough — while tier 1 alone (15 XP) is still real money, not free.
+
 export const HINT_TIER_COSTS = { 1: 15, 2: 30, 3: 50 };
 const TIERS = [1, 2, 3];
 

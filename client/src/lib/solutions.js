@@ -1,31 +1,3 @@
-// src/lib/solutions.js
-//
-// Data-driven per-challenge solution walkthroughs, rendered generically by
-// src/pages/SolutionPage.jsx. Keyed by `docker_image` — the same key
-// MissionBrief.jsx's OBJECTIVES_BY_IMAGE uses to look up a challenge
-// module's content, so the whole app shares one identifier convention per
-// challenge instead of inventing a second one here.
-//
-// TO ADD A NEW CHALLENGE'S SOLUTION: add a new top-level key (its
-// docker_image, e.g. the 'chainbreak-challenge-2' entry below) with the
-// same shape as 'chainbreak-challenge-1'. Nothing in SolutionPage.jsx needs
-// to change — it renders whatever `layers.{web,container,cloud}.steps` it
-// finds for the current challenge's docker_image. A layer with an empty
-// `steps` array (or `comingSoon: true`) renders a clean "not written yet" /
-// "coming soon" placeholder through the same generic path.
-//
-// STEP SHAPE:
-//   {
-//     title:          string  — e.g. "Step 1 — Bypass authentication via SQL injection"
-//     layer:          'web' | 'container' | 'cloud'
-//     category:       string, optional — OWASP category / technique label
-//     explanation:    string  — 2-4 sentences: what the vuln is, why it
-//                                works, what the learner is exploiting
-//     commands:       [{ label?: string, code: string }, ...]
-//     expectedResult: string, optional — what the learner should see
-//     flag:           string, optional — the flag captured at this step
-//   }
-
 export const SOLUTIONS = {
   // Every command and expected-result block below was copied verbatim from
   // a real run against a live chainbreak-challenge-1 target, not
@@ -277,11 +249,7 @@ These are the credentials that bridge into the cloud layer below.`,
     },
   },
 
-  // Every command and expected-result block below was copied verbatim from
-  // a real run against a standalone chainbreak-challenge-2 target,
-  // including a full reverse-shell RCE fired end-to-end. `remediation` is
-  // an optional field (see the STEP SHAPE note above); SolutionWalkthrough
-  // renders it only when present, so Challenge 1's steps are unaffected.
+
   'chainbreak-challenge-2': {
     title: 'Challenge 2 — Four Web Vulnerabilities to Container Root',
     subtitle:

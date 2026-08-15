@@ -186,13 +186,7 @@ async function removeNetwork(sessionId, id, failures) {
   }
 }
 
-/**
- * Attempts all three resources regardless of whether an earlier one failed,
- * treating "already gone" (404) as success on each. Throws with every real
- * failure aggregated onto `err.failures` only if something was genuinely
- * left behind — callers (reaper.service.js, session.service.js) rely on
- * this to decide whether the session's DB row can be marked done.
- */
+
 export async function teardown(session) {
   const sessionId = session.id ?? '(unknown)';
   const { container_id, workstation_container_id, network_id } = session;

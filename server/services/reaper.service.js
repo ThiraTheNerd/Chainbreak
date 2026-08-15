@@ -1,4 +1,5 @@
 import * as sessions from '../repositories/session.repository.js';
+import * as learnerSessions from '../repositories/learner-session.repository.js';
 import * as dockerService from './docker.service.js';
 import logger from '../utils/logger.js';
 
@@ -8,14 +9,13 @@ export async function sweepOnce(io) {
   const expired = await sessions.findExpired();
   for (const s of expired) {
     try {
+
+      await learnerSessions.endAllActiveForEnvironment(s.id, 'expired');
       io.in(`session:${s.id}`).disconnectSockets(true);
       await dockerService.teardown(s);
       await sessions.markExpired(s.id);
       logger.info(`reaper: reclaimed session ${s.id}`);
     } catch (err) {
-      // Leave the row 'running' on failure so it's retried next sweep.
-      // teardown() attempts every resource best-effort before throwing, so
-      // err.failures names exactly which ones are still stuck.
       logger.error(
         `reaper: failed on ${s.id} — will retry next sweep` +
           (err.failures ? ` (stuck: ${err.failures.map((f) => f.resource).join(', ')})` : ''),
@@ -32,25 +32,11 @@ export async function sweepOnce(io) {
   return expired.length;
 }
 
-/**
- * Catches what findExpired()/sweepOnce() structurally can't: rows whose DB
- * status no longer reflects reality in Docker, because nothing else ever
- * revisits them —
- *   1. 'provisioning' rows past their own expiry that never got as far as
- *      having any container id attached (e.g. a server crash mid-provision).
- *      findExpired()'s query never selects these no matter how stale.
- *   2. 'running'/'provisioning' rows with container ids whose containers no
- *      longer exist in Docker at all (crashed, manually removed, wiped by
- *      `docker system prune`, etc.).
- * Runs at the end of every periodic sweep, and once at startup, so a server
- * restart cleans up immediately rather than waiting up to SWEEP_MS.
- */
+
 export async function reconcileStale() {
   let reconciled = 0;
 
-  // The expiry check happens in SQL (findStaleProvisioning), not a JS-side
-  // Date comparison — see that function's doc comment for the mysql2/
-  // timezone footgun that makes the JS-side version unsafe here.
+
   const staleProvisioning = await sessions.findStaleProvisioning();
   for (const s of staleProvisioning) {
     if (s.container_id || s.workstation_container_id) continue; // handled in step 2 instead
@@ -75,6 +61,7 @@ export async function reconcileStale() {
       } catch (err) {
         logger.warn(`reaper: reconcile teardown had residual failures for ${s.id}: ${err.message}`);
       }
+      await learnerSessions.endAllActiveForEnvironment(s.id, 'expired');
       await sessions.markEnded(s.id);
       logger.warn(`reaper: reconciled orphaned-row session ${s.id} — its containers were already gone from Docker`);
       reconciled++;

@@ -13,12 +13,7 @@ import { CoverageAndHints } from '@/components/progress/CoverageAndHints'
 import { RecentActivity } from '@/components/progress/RecentActivity'
 import { timeAgo, shortDate } from '@/lib/time'
 
-// Every number here comes from existing repositories/services (useScores,
-// useChallenges) plus GET /api/progress/me for shapes nothing else exposes
-// (time series, OWASP/hint-tier breakdowns, last-active) — see
-// server/services/progress.service.js, which reuses the same scoring and
-// per-layer state rather than recomputing it, so nothing here can drift
-// from numbers shown elsewhere in the app.
+
 export function Progress() {
   const { user } = useAuth()
   const { data: challengeData, isLoading: loadingChallenges } = useChallenges()

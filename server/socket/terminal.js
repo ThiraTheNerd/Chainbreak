@@ -1,7 +1,9 @@
 import * as pty       from 'node-pty';
 import { execFile }   from 'node:child_process';
 import { promisify }  from 'node:util';
-import { submitFlag } from '../services/flag.service.js';
+import { submitFlagForSession } from '../services/flag.service.js';
+import * as learnerSessions from '../repositories/learner-session.repository.js';
+import logger         from '../utils/logger.js';
 import pool           from '../db/connection.js';
 
 const execFileAsync = promisify(execFile);
@@ -10,10 +12,7 @@ const FLAG_PATTERN = /flag\{[A-Za-z0-9_-]{4,64}\}/g;
 
 const ANSI = { reset: '\x1b[0m', bold: '\x1b[1m', green: '\x1b[32m', amber: '\x1b[33m', dim: '\x1b[2m' };
 
-// busybox ash (the `sh` in most minimal images) prints bash prompt escapes
-// (\u \h \w) literally instead of expanding them, so bash is preferred when
-// available — but only after checking, so a container without bash still
-// gets a shell instead of a failed exec.
+
 async function detectShell(containerId) {
   try {
     await execFileAsync('/usr/local/bin/docker', ['exec', containerId, 'sh', '-c', 'command -v bash']);
@@ -55,12 +54,7 @@ export async function handleTerminal(socket, io) {
   // cosmetic, never written to the container or scanned for flags.
   socket.emit('terminal:output', buildWelcomeBanner(targetAlias));
 
-  // Spawned as a direct argv array so nothing upstream of `docker exec`
-  // mangles arguments. `-t` allocates a real pty (an `-i`-only exec never
-  // renders an interactive prompt). The prompt itself comes from the
-  // image's baked-in ~/.bashrc (server/docker/workstation/Dockerfile) —
-  // injecting `-e PS1=...` doesn't survive bash's own startup files
-  // reliably, so nothing is injected per-exec here.
+ 
   const shell = await detectShell(containerId);
   let ptyProcess;
   try {
@@ -114,6 +108,14 @@ export async function handleTerminal(socket, io) {
     try { ptyProcess.kill(); } catch {}
     console.log(`[Terminal] pty closed — ${socket.user.username}`);
   });
+
+
+  ptyProcess.onExit(({ exitCode, signal }) => {
+    console.log(`[Terminal] pty exited for ${socket.user.username} (code=${exitCode}, signal=${signal})`);
+    learnerSessions.end(socket.learnerSessionId, 'pty_exit').catch((err) =>
+      logger.error(`[Terminal] failed to end learner session ${socket.learnerSessionId} on pty exit`, err)
+    );
+  });
 }
 
 // After a flag lands, the client writes feedback text into xterm
@@ -131,49 +133,54 @@ function nudgePromptRedraw(ptyProcess) {
   }
 }
 
+// Tests the detected flag against every challenge in the session's own
+// module (resolved server-side inside flag.service.js from
+// socket.session.challenge_id — never from client input) and records
+// EXACTLY ONE submissions row for the outcome, whichever candidate (if any)
+// actually matched. See flag.service.js::submitFlagForSession for why this
+// is safe for multi-flag modules and why it no longer creates a row per
+// candidate checked.
 async function processFlagCapture(socket, io, flagValue, ptyProcess) {
-  const challengeIds = socket.challengeIds || [socket.session.challenge_id]
-  console.log('[Terminal] challengeIds for session:', socket.challengeIds);
-  for (const challengeId of challengeIds) {
-    const result = await submitFlag({
-      userId:        socket.user.id,
-      challengeId,
-      submittedFlag: flagValue,
-    });
+  const result = await submitFlagForSession({
+    userId:             socket.user.id,
+    sessionChallengeId: socket.session.challenge_id,
+    submittedFlag:      flagValue,
+    learnerSessionId:   socket.learnerSessionId,
+  });
 
-    if (!result.correct) continue
+  if (!result.correct) return;
 
-    if (result.alreadySolved) {
-      socket.emit('flag:already_captured', { flag: flagValue, challengeId });
-      nudgePromptRedraw(ptyProcess);
-      return;
-    }
+  const { challengeId } = result;
 
-    const [rows] = await pool.execute(
-      'SELECT layer FROM challenges WHERE id = ?',
-      [challengeId]
-    );
-    const layer = rows[0]?.layer || 'owasp'; // 'owasp' | 'docker' | 'aws'
-
-    socket.emit('flag:captured', {
-      flag:          flagValue,
-      challengeId,
-      layer,
-      pointsAwarded: result.pointsAwarded,
-      message:       `Flag captured — ${layer} layer +${result.pointsAwarded} pts`,
-    });
+  if (result.alreadySolved) {
+    socket.emit('flag:already_captured', { flag: flagValue, challengeId });
     nudgePromptRedraw(ptyProcess);
-
-    io.emit('scores:updated', {
-      userId:      socket.user.id,
-      username:    socket.user.username,
-      challengeId,
-      layer,
-    });
-
-    console.log(
-      `[Flag] ✓ ${socket.user.username} captured ${flagValue} (${layer}, +${result.pointsAwarded}pts)`
-    );
     return;
   }
+
+  const [rows] = await pool.execute(
+    'SELECT layer FROM challenges WHERE id = ?',
+    [challengeId]
+  );
+  const layer = rows[0]?.layer || 'owasp'; // 'owasp' | 'docker' | 'aws'
+
+  socket.emit('flag:captured', {
+    flag:          flagValue,
+    challengeId,
+    layer,
+    pointsAwarded: result.pointsAwarded,
+    message:       `Flag captured — ${layer} layer +${result.pointsAwarded} pts`,
+  });
+  nudgePromptRedraw(ptyProcess);
+
+  io.emit('scores:updated', {
+    userId:      socket.user.id,
+    username:    socket.user.username,
+    challengeId,
+    layer,
+  });
+
+  console.log(
+    `[Flag] ✓ ${socket.user.username} captured ${flagValue} (${layer}, +${result.pointsAwarded}pts)`
+  );
 }

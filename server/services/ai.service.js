@@ -1,13 +1,3 @@
-/** @file server/services/ai.service.js — server-side-only Claude call for hint generation.
- *
- * SECURITY: this is the ONLY place ANTHROPIC_API_KEY is read. The key never
- * appears in a client-facing response — callers get back generated TEXT
- * only (see generateHint's return shape). The prompt is built entirely
- * from server-trusted data (server/lib/hintContext.js + the challenge row
- * from the database) — no raw request body / user-supplied string is ever
- * interpolated into it, so there is no prompt-injection surface here.
- */
-
 import config from '../config/env.js';
 import logger from '../utils/logger.js';
 

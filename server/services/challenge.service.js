@@ -1,5 +1,5 @@
 import * as challengeRepository from '../repositories/challenge.repository.js';
-import * as submissionRepository from '../repositories/submission.repository.js';
+import * as completionRepository from '../repositories/completion.repository.js';
 import * as sessionRepository from '../repositories/session.repository.js';
 import { NotFoundError, BadRequestError } from '../utils/errors.js';
 
@@ -18,10 +18,7 @@ export async function getChallenge(id) {
   return challenge;
 }
 
-// Read straight from `submissions`, so this reflects permanent solve state
-// rather than any one session's lifetime. Also reports whether an active
-// session exists for the module, so the dashboard can offer "Continue"
-// without a prior solve.
+
 export async function getChallengeProgress(userId, challengeId) {
   const target = await challengeRepository.findById(challengeId);
   if (!target) throw new NotFoundError('Challenge not found');
@@ -44,7 +41,7 @@ export async function getChallengeProgress(userId, challengeId) {
     VALID_LAYERS.map(async (layer) => {
       const id = layerChallengeIds[layer];
       if (!id) return;
-      const isSolved = await submissionRepository.hasSolved(userId, id);
+      const isSolved = await completionRepository.hasCompleted(userId, id);
       solved[layer] = isSolved;
       capturedFlagValues[layer] = isSolved ? '[already captured]' : null;
     })

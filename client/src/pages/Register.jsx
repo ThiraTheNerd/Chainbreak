@@ -9,7 +9,7 @@ export function Register() {
   const { login, isAuthenticated } = useAuth()
   const navigate = useNavigate()
 
-  const [form,   setForm]   = useState({ username: '', email: '', password: '' })
+  const [form,   setForm]   = useState({ username: '', email: '', password: '', inviteCode: '' })
   const [showPw, setShowPw] = useState(false)
 
   const registerMutation = useMutation({
@@ -26,7 +26,7 @@ export function Register() {
 
   function handleSubmit(e) {
     e.preventDefault()
-    if (!form.username || !form.email || !form.password) return
+    if (!form.username || !form.email || !form.password || !form.inviteCode) return
     registerMutation.mutate(form)
   }
 
@@ -60,6 +60,23 @@ export function Register() {
         </h1>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <div>
+            <label className="text-text-2 text-sm mb-1.5 block">Invite code</label>
+            <input
+              type="text"
+              value={form.inviteCode}
+              onChange={update('inviteCode')}
+              placeholder="Provided by the research team"
+              required
+              autoComplete="off"
+              className="cb-input font-mono"
+            />
+            <p className="text-text-3 text-xs mt-1">
+              ChainBreak is invite-only for this study — you should have received a code
+              from the research team.
+            </p>
+          </div>
+
           <div>
             <label className="text-text-2 text-sm mb-1.5 block">Username</label>
             <input

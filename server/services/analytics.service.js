@@ -1,36 +1,7 @@
-/** @file server/services/analytics.service.js — read-only aggregation for the admin
- *  Research Analytics dashboard (GET /api/admin/analytics).
- *
- *  This computes the SAME metrics, with the SAME math, as the Python research
- *  pipeline in analysis/ — a second (JS/live) implementation of that math, not
- *  a different metric set. Keep in sync with:
- *    - analysis/db_loader.py     — canonical attempt_number = 1 rule
- *    - analysis/learning_gain.py — RQ1: per-domain pre/post means, Hake's
- *                                  normalised gain g = (post-pre)/(max-pre)
- *    - analysis/hint_analysis.py — RQ3: hint uptake, deepest-tier-reached
- *                                  buckets, AI-vs-fallback source split
- *
- *  Returns AGGREGATES ONLY — no user_id, username, or per-participant row
- *  ever appears in the response. That's a stronger anonymisation guarantee
- *  than the Python pipeline needs (which exports a pseudonymous
- *  per-participant CSV for the researcher's own offline analysis, see
- *  analysis/participant_map.json); this dashboard only ever renders
- *  aggregate charts, so it has no reason to carry per-participant identifiers
- *  at all, pseudonymous or otherwise.
- *
- *  Every number here is a live aggregate over real `assessments` /
- *  `hint_unlocks` rows. Nothing is fabricated, defaulted to a plausible-
- *  looking value, or backfilled — nulls and zero-length arrays are returned
- *  as-is, and it is the caller's job (the admin UI) to render an honest
- *  "not enough data yet" state rather than a placeholder chart.
- */
+
 
 import * as analyticsRepository from '../repositories/analytics.repository.js';
 
-// Mirrors analysis/learning_gain.py's DOMAIN_MAX / KNOWLEDGE_MAX exactly —
-// fixed by the assessment instrument (10 web + 13 container + 10 cloud
-// items, see server/routes/assessment.js's ANSWER_KEY). If the instrument
-// ever changes, update both this and learning_gain.py together.
 const DOMAIN_MAX = { web: 10, container: 13, cloud: 10 };
 const KNOWLEDGE_MAX = 33;
 
@@ -55,17 +26,11 @@ function round(x, dp) {
   return Math.round(x * f) / f;
 }
 
-// Hake's per-participant normalised gain g = (post-pre)/(max-pre). No
-// headroom (pre === max) makes g undefined, excluded from the mean rather
-// than divided by zero — same guard as learning_gain.normalised_gain().
 function normalisedGain(pre, post, max) {
   const headroom = max - pre;
   return headroom > 0 ? (post - pre) / headroom : null;
 }
 
-// One user_id -> {pre: row, post: row}; only users with BOTH phases count
-// as a complete pair — same rule learning_gain.load_scores() enforces via
-// its dropna() on missing pre_*/post_* columns.
 function pairAssessmentsByUser(rows) {
   const byUser = new Map();
   for (const row of rows) {
