@@ -1,0 +1,29 @@
+# Re-identification key: links real user_id -> participant code. Sensitive
+# research data — must never be committed.
+participant_map.json
+
+# Anonymised export of real participant data, and any real-data output. Still
+# real research data even though anonymised.
+exports/
+*results_summary.csv
+*fig_*.png
+scripts/
+
+
+# Real interview coding (input) and RQ2 thematic-analysis output — real,
+# anonymised research data, never committed. See thematic_analysis.py /
+# interview_coding_template.csv (the template itself IS committed — it only
+# ever holds illustrative EXAMPLE rows).
+data/
+*rq2_*.csv
+
+# RQ3 hint-usage analysis output — real, anonymised research data.
+*rq3_*.csv
+
+# Synthetic pipeline-test output — regenerate with make_synthetic_data.py.
+_SYNTHETIC_*.csv
+
+__pycache__/
+*.pyc
+.venv/
+

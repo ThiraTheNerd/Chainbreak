@@ -1,0 +1,12 @@
+pandas>=2.0
+numpy>=1.24
+scipy>=1.10
+matplotlib>=3.7
+python-dotenv>=1.0
+
+# MySQL driver for --from-db (db_loader.py tries PyMySQL first, falls back to
+# mysql-connector-python). PyMySQL is pure-Python and needs no system MySQL
+# client library, so it's the default; swap the comment below if you'd rather
+# use mysql-connector-python.
+PyMySQL>=1.1
+# mysql-connector-python>=8.3

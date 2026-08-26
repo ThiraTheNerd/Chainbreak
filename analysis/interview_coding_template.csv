@@ -1,0 +1,24 @@
+# EXAMPLE TEMPLATE — the 4 rows below are ILLUSTRATIVE ONLY. They are NOT real
+# interview data. To use this for real: copy this file to
+# analysis/data/interview_coding.csv, DELETE the EXAMPLE rows below, and
+# replace them with your OWN coding of the real (anonymised) interview notes.
+#
+# Columns:
+#   participant_code — anonymised code only (P01, P02, ...) — never a real name.
+#   prompt           — the interview guide question/topic this excerpt responds to.
+#   excerpt          — the participant's paraphrased or noted response. Interviews
+#                       here are written notes, not verbatim recordings — write
+#                       what they said in your own words, close to how they said it.
+#   code             — YOUR short label for what this excerpt is an instance of
+#                       (Braun & Clarke phase 2: generate initial codes).
+#   theme            — the higher-level theme this code rolls up to (phase 3-4:
+#                       search for / review themes). Several codes can share a theme.
+#
+# This file is analysed by thematic_analysis.py, which only tabulates and
+# visualises what YOU enter here — it does not generate, infer, or suggest a
+# code, theme, or quote. See analysis/README.md for the full workflow.
+participant_code,prompt,excerpt,code,theme
+EXAMPLE-P01,"Did moving from the web exploit through to the container and cloud stages feel like a realistic continuation of a real attack, or did it feel like separate, disconnected puzzles?","Said the SSH pivot after the SQL injection felt like something a real attacker would actually do next, not an artificial jump to a new puzzle.",realistic_pivot,Chaining realism
+EXAMPLE-P02,"How did completing the full attack chain change the way you think about how a real breach unfolds?","Said they used to think of web, container, and cloud security as three separate topics, and had not previously connected how a foothold in one layer leads to compromise of the next.",connects_layers,Understanding attack progression
+EXAMPLE-P03,"How does this compare with other platforms or labs you've used before, such as single-vulnerability CTF challenges?","Compared it to a previous single-box CTF challenge, saying that one stopped as soon as you got a shell, whereas here getting the shell was only the beginning of the exercise.",contrast_single_layer,Comparison to single-layer platforms
+EXAMPLE-P04,"How would you describe your level of engagement while working through the exercise, compared to previous security training you've done?","Said they stayed engaged for the whole session and wanted to keep going after finishing challenge 2, contrasting this with usually losing interest partway through a normal lab.",sustained_engagement,Engagement
