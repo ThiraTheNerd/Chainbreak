@@ -1,0 +1,15 @@
+{
+  "name": "chainbreak-exploit-harness",
+  "private": true,
+  "type": "module",
+  "description": "Functional exploitability harness for ChainBreak (MSc dissertation Ch.5 S.2.1 evidence) — drives each kill-chain through the real API and terminal WebSocket, exactly as a learner would.",
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "vitest": "^2.1.9"
+  },
+  "dependencies": {
+    "socket.io-client": "^4.8.3"
+  }
+}

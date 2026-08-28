@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="1" failures="0" errors="0" time="114.237">
+    <testsuite name="chains/chainA.test.js" timestamp="2026-09-11T23:16:18.446Z" hostname="MacBookPro" tests="1" failures="0" errors="0" skipped="0" time="113.711690393">
+        <testcase classname="chains/chainA.test.js" name="Chain A — challenge-1 payments module (web -&gt; in-container root -&gt; cloud) &gt; completes web foothold -&gt; in-container root -&gt; cloud abuse, capturing all six flags" time="112.637064871">
+            <system-out>
+
+[stage] -&gt; 1: instantiate + reachability
+
+
+[stage] -&gt; 2: web foothold (SQLi bypass + IDOR)
+
+
+[stage] -&gt; 3: crack SSH key -&gt; pivot -&gt; SUID privesc to root
+
+
+[stage] -&gt; 4: cloud abuse via leaked deploy-bot creds
+
+
+[Chain A] end-to-end wall-clock time: 112638ms
+
+            </system-out>
+        </testcase>
+    </testsuite>
+</testsuites>
