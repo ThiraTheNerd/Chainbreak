@@ -7,19 +7,16 @@ import path     from 'node:path';
 
 const app        = express();
 const PORT       = process.env.PORT   || 3000;
-// docker.service.js provision() injects FLAG_1/FLAG_2A/FLAG_PRIVESC explicitly,
-// matching the seeded flag plaintexts. The literal defaults below only cover
-// running this container standalone (outside ChainBreak) without those envs set.
-// The docker-layer flag is no longer served here — it's a real SUID privesc
-// (see entrypoint.sh / /root/flag.txt / /usr/local/bin/backup-helper), not an
+// The literal defaults below only cover running this container standalone
+// (outside ChainBreak) without docker.service.js's injected envs set. The
+// docker-layer flag is not served here — it's a real SUID privesc (see
+// entrypoint.sh / /root/flag.txt / /usr/local/bin/backup-helper), not an
 // HTTP response field.
 const FLAG_1       = process.env.FLAG_1  || 'flag{sqli_owasp_bypass}';
 const FLAG_2A      = process.env.FLAG_2A || 'flag{sqli_broken_access}';
 const JWT_SECRET   = 'challenge-1-not-a-real-secret';
 const BACKUPS_DIR  = '/opt/payments/backups';
 
-// Pulls the caller's JWT (issued by POST /login above) out of the Authorization
-// header. Returns the decoded claims, or null if missing/invalid/expired.
 function verifyBearer(req) {
   const [scheme, token] = (req.headers.authorization || '').split(' ');
   if (scheme !== 'Bearer' || !token) return null;
@@ -53,18 +50,9 @@ db.exec(`
 
 // INTENTIONALLY VULNERABLE — OWASP A03:2021 SQL Injection
 //
-// Working payload:
-//   username: admin
-//   password: anything' OR '1'='1
-//
-// Resulting query:
-//   WHERE username = 'admin' AND password = 'anything' OR '1'='1'
-// Evaluates as:
-//   WHERE (username = 'admin' AND password = 'anything') OR ('1'='1')
-// '1'='1' is always true — every row matches.
-// Admin is first in the table so LIMIT 1 returns admin.
-//
-// INTENTIONALLY VULNERABLE - OWASP A03:2021 SQL Injection
+// Working payload: username=admin, password=anything' OR '1'='1
+// Evaluates as: WHERE (username='admin' AND password='anything') OR ('1'='1')
+// — always true, so every row matches; admin is first, so LIMIT 1 returns it.
 app.post('/login', (req, res) => {
   const { username = '', password = '' } = req.body;
 
@@ -106,12 +94,9 @@ app.post('/login', (req, res) => {
 
 // INTENTIONALLY VULNERABLE — OWASP A01:2021 Broken Access Control
 //
-// This checks AUTHENTICATION (a valid JWT via jwt.verify) but not
-// AUTHORIZATION — there is no `claims.role === 'admin'` check, so any
-// logged-in user (not just admin) can list every account. Authenticated
-// is not the same as authorized; that missing role check is the bug.
-//
-// INTENTIONALLY VULNERABLE
+// Checks authentication (a valid JWT) but not authorization — there is no
+// `claims.role === 'admin'` check, so any logged-in user can list every
+// account.
 app.get('/api/users', (req, res) => {
   const claims = verifyBearer(req);
   if (!claims) {
@@ -121,9 +106,6 @@ app.get('/api/users', (req, res) => {
   const users = db.prepare(
     'SELECT id, username, email, role FROM users'
   ).all();
-  // Self-reveal trail: points at the backup/export capability below without
-  // handing over the secret filename directly — following the link and
-  // reading the manifest it names is how a learner is meant to find it.
   res.json({
     users,
     flag: FLAG_2A,
@@ -131,15 +113,9 @@ app.get('/api/users', (req, res) => {
   });
 });
 
-// INTENTIONALLY VULNERABLE — OWASP A01:2021 Broken Access Control +
-// path traversal / sensitive file exposure. Requires a valid JWT (same
-// missing-role-check bug as /api/users above), and the `file` query param
-// is joined onto BACKUPS_DIR with no traversal sanitisation and no
-// filename allowlist — a name that's already in the directory (like the
-// leaked SSH key) or a '../' escape both reach files this endpoint was
-// never meant to serve.
-//
-// INTENTIONALLY VULNERABLE — do not fix
+// INTENTIONALLY VULNERABLE — do not fix. OWASP A01:2021 Broken Access
+// Control + path traversal: the `file` query param is joined onto
+// BACKUPS_DIR with no traversal sanitisation and no filename allowlist.
 app.get('/api/admin/backup', (req, res) => {
   const claims = verifyBearer(req);
   if (!claims) {
@@ -151,7 +127,7 @@ app.get('/api/admin/backup', (req, res) => {
     return res.status(400).json({ error: 'file query param required' });
   }
 
-  const target = path.join(BACKUPS_DIR, file); // no traversal check
+  const target = path.join(BACKUPS_DIR, file);
   try {
     res.type('text/plain').send(fs.readFileSync(target, 'utf8'));
   } catch (err) {
@@ -159,9 +135,6 @@ app.get('/api/admin/backup', (req, res) => {
   }
 });
 
-// Plain and safe — no diagnostics mode here. The docker-layer flag now lives
-// on the filesystem behind a real privilege boundary (see entrypoint.sh),
-// not behind a query string on this endpoint.
 app.get('/health', (_req, res) => res.json({ status: 'ok', version: '1.0.0' }));
 
 app.listen(PORT, '0.0.0.0', () => {

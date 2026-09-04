@@ -14,16 +14,13 @@ const cookieParser = require('cookie-parser');
 const serialize    = require('node-serialize');
 const jwt          = require('jsonwebtoken');
 
-// ── Load secrets/flags into constants, then SCRUB them from process.env ──────
-// The app needs these at runtime, but a later RCE shell (running as the same
-// app user) could otherwise just run `env` and read every web flag at once,
-// trivialising the challenge. Deleting them from process.env means any shell
-// the RCE spawns AFTER startup inherits a cleaned environment, so `env` shows
-// nothing. (Honest caveat: /proc/<pid>/environ still reflects the exec-time
-// environment, so a determined RCE as the same user can still recover these --
-// which is itself the lesson: code execution is total app compromise. The
-// scrub stops casual/accidental leakage, not an app-user who is already root
-// of the process.)
+// Secrets/flags are loaded into constants then scrubbed from process.env:
+// otherwise a later RCE shell (same app user) could just run `env` and read
+// every web flag at once, trivialising the challenge. Any shell the RCE
+// spawns AFTER startup inherits the cleaned environment. Caveat:
+// /proc/<pid>/environ still reflects the exec-time environment, so a
+// determined RCE as the same user can still recover these — this scrub
+// stops casual leakage, not a user who is already running as the process.
 const FLAG_ERRORLEAK = process.env.FLAG_ERRORLEAK || 'flag{verbose_error_disclosure}';
 const FLAG_WEAKAUTH  = process.env.FLAG_WEAKAUTH  || 'flag{weak_auth_no_lockout}';
 const FLAG_JWTFORGE  = process.env.FLAG_JWTFORGE  || 'flag{jwt_secret_cracked}';
@@ -38,16 +35,17 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// ── A03: restore preferences from the profile cookie (deserialisation sink) ──
+// A03: restores preferences from the profile cookie — the deserialisation
+// RCE sink is intentional (INTENTIONALLY VULNERABLE, do not fix).
 app.use((req, res, next) => {
   const cookie = req.cookies.profile;
   if (cookie) {
     try {
       const json = Buffer.from(cookie, 'base64').toString('utf8');
-      req.profile = serialize.unserialize(json);          // >>> RCE sink <<<
+      req.profile = serialize.unserialize(json); // >>> RCE sink <<<
     } catch (err) {
-      // A10: the exception is caught but MISHANDLED -- the raw stack trace
-      // (which names node-serialize) plus a debug token are leaked to the client.
+      // A10: caught but INTENTIONALLY MISHANDLED — the raw stack trace
+      // (naming node-serialize) plus a debug token are leaked to the client.
       return res
         .status(500)
         .type('html')
@@ -61,7 +59,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// ── Home ─────────────────────────────────────────────────────────────────────
 app.get('/', (req, res) => {
   if (!req.profile) {
     const seed = serialize.serialize({ user: 'guest', theme: 'light', role: 'viewer' });
@@ -79,11 +76,10 @@ app.get('/', (req, res) => {
   );
 });
 
-// ── A07: weak, brute-forceable login ─────────────────────────────────────────
-// One low-priv "support" account with a weak password and NO rate limiting or
-// lockout. The username is discoverable via the hint in the login page; the
-// password is brute-forceable against a wordlist. A successful login returns a
-// role=support JWT (which is NOT enough to reach /admin -- see A04).
+// A07: INTENTIONALLY VULNERABLE — one low-priv "support" account, weak
+// password, no rate limiting or lockout, brute-forceable against a
+// wordlist. A successful login returns a role=support JWT (not enough to
+// reach /admin — see A04 below).
 const USERS = {
   support: { password: 'support123', role: 'support' },
 };
@@ -103,7 +99,6 @@ app.get('/login', (req, res) => {
 app.post('/login', (req, res) => {
   const { username, password } = req.body || {};
   const user = USERS[username];
-  // No lockout, no delay, no rate limit -> brute-forceable (A07).
   if (!user || user.password !== password) {
     return res.status(401).json({ error: 'Invalid credentials' });
   }
@@ -116,17 +111,17 @@ app.post('/login', (req, res) => {
     message: `Welcome, ${username}`,
     role:    user.role,
     token,
-    flag:    FLAG_WEAKAUTH,             // A07 flag
+    flag:    FLAG_WEAKAUTH,
   });
 });
 
-// ── A04: admin console, gated on a signed admin JWT ──────────────────────────
-// The app NEVER issues an admin token. The intended path is to crack the weak
-// HS256 secret offline and FORGE one -- that's the cryptographic-failure lesson.
+// A04: INTENTIONALLY VULNERABLE — admin console gated on a signed admin
+// JWT that the app never issues. The intended path is to crack the weak
+// HS256 secret offline and forge one.
 function verifyBearer(req) {
   const auth  = req.headers.authorization || '';
   const token = auth.replace(/^Bearer\s+/i, '');
-  return jwt.verify(token, JWT_SECRET);      // throws on a bad signature
+  return jwt.verify(token, JWT_SECRET);
 }
 
 app.get('/admin', (req, res) => {
@@ -139,7 +134,7 @@ app.get('/admin', (req, res) => {
   if (claims.role !== 'admin') {
     return res.status(403).json({ error: 'Admins only' });
   }
-  res.json({ message: 'Admin console', flag: FLAG_JWTFORGE });   // A04 flag
+  res.json({ message: 'Admin console', flag: FLAG_JWTFORGE });
 });
 
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
