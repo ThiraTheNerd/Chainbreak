@@ -1,11 +1,7 @@
-// src/lib/susItems.js
-// The standard, unmodified System Usability Scale (Brooke, 1996) — 10 items,
-// alternating positive/negative wording. Only "the system" has been renamed
-// to "ChainBreak"; item count, order, and polarity are canonical and must
-// not change — the 0-100 scoring formula (server-side, see
-// server/routes/assessment.js) depends on odd items being positively worded
-// and even items being negatively worded. Administered post-session only,
-// as the final step.
+// The standard, unmodified System Usability Scale (Brooke, 1996). Item
+// count, order, and polarity must not change — the 0-100 scoring formula
+// (server/routes/assessment.js) depends on odd items being positively
+// worded and even items being negatively worded.
 
 export const SUS_SCALE = [
   { value: 1, label: 'Strongly disagree' },

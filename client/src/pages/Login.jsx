@@ -22,7 +22,6 @@ export function Login() {
     },
   })
 
-  // Redirect if already logged in
   if (isAuthenticated) return <Navigate to="/dashboard" replace />
 
   function handleSubmit(e) {
@@ -40,7 +39,6 @@ export function Login() {
         backgroundSize: '24px 24px',
       }}
     >
-      {/* Logo */}
       <div className="flex flex-col items-center mb-8">
         <div className="flex items-center gap-2 mb-2">
           <div className="w-9 h-9 bg-surface rounded-lg flex items-center
@@ -56,8 +54,6 @@ export function Login() {
           Master the full attack kill chain
         </p>
       </div>
-
-      {/* Login card */}
       <div className="w-full max-w-sm bg-surface border border-border
                       rounded-xl p-8">
         <div className="flex items-center justify-between mb-6">
@@ -66,7 +62,6 @@ export function Login() {
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          {/* Email */}
           <div>
             <label className="text-text-2 text-sm mb-1.5 block">
               Email
@@ -81,8 +76,6 @@ export function Login() {
               className="cb-input"
             />
           </div>
-
-          {/* Password */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <label className="text-text-2 text-sm">Password</label>
@@ -117,16 +110,12 @@ export function Login() {
               </button>
             </div>
           </div>
-
-          {/* Error */}
           {loginMutation.isError && (
             <div className="bg-danger/10 border border-danger/30 rounded-lg
                             px-3 py-2 text-danger text-sm">
               {loginMutation.error?.message || 'Login failed'}
             </div>
           )}
-
-          {/* Submit */}
           <button
             type="submit"
             disabled={loginMutation.isPending}
@@ -142,16 +131,12 @@ export function Login() {
           </button>
         </form>
       </div>
-
-      {/* Register link */}
       <p className="mt-4 text-text-2 text-sm">
         Don't have an account?{' '}
         <Link to="/register" className="text-accent hover:underline">
           Register
         </Link>
       </p>
-
-      {/* Tech badges */}
       <div className="flex items-center gap-3 mt-8">
         {['OWASP Top 10', 'Docker security', 'AWS cloud'].map(label => (
           <span
@@ -163,8 +148,6 @@ export function Login() {
           </span>
         ))}
       </div>
-
-      {/* Security note */}
       <div className="flex items-center gap-1.5 mt-4">
         <div className="w-1.5 h-1.5 rounded-full bg-success" />
         <span className="text-text-3 text-xs font-mono">

@@ -10,14 +10,12 @@ import { KillChainGraph }      from '@/components/killchain/KillChainGraph'
 import { FlagStatusRow }       from '@/components/challenge/FlagStatusRow'
 import { MissionBrief }        from '@/components/challenge/MissionBrief'
 
-// challenge.layer ('owasp'|'docker'|'aws') -> the kill-chain node/panel key it maps to
 const LAYER_KEY = { owasp: 'web', docker: 'container', aws: 'cloud' }
 
-// Draggable split between the kill-chain section and the tabbed content
-// section of the right panel — pixel-based (not percentage) so the minimums
-// mean the same thing regardless of viewport height.
-const MIN_KILLCHAIN_PX = 160  // enough for a condensed graph + its header
-const MIN_TABS_PX      = 220  // enough to read a few lines of a solution step
+// Pixel-based (not percentage) so the minimums mean the same thing
+// regardless of viewport height.
+const MIN_KILLCHAIN_PX = 160
+const MIN_TABS_PX      = 220
 
 export function ChallengePage() {
   const { id }             = useParams()
@@ -26,24 +24,19 @@ export function ChallengePage() {
   const { token, isAuthenticated } = useAuth()
   const queryClient        = useQueryClient()
 
-  // Session expiry — stored when navigating from dashboard
-  // Fallback: 60 minutes from now if not stored
   const expiresAt = sessionStorage.getItem(`cb_session_${sessionId}_expires`)
     || new Date(Date.now() + 60 * 60 * 1000).toISOString()
 
-  // Raw captured flag text, keyed by CHALLENGE ID (not layer) — a layer can
-  // hold more than one flag, so a single per-layer slot would lose one.
+  // Keyed by challenge id, not layer — a layer can hold more than one flag,
+  // so a single per-layer slot would lose one.
   const [capturedFlags, setCapturedFlags]   = useState({})
   const [connected, setConnected]           = useState(false)
   const [terminalError, setTerminalError]   = useState(null)
 
-  // Draggable kill-chain/tabs split (right panel only — never touches the
-  // terminal pane). `topPx` is null until first measured, at which point it
-  // falls back to a 60% starting split; after that, drag math is pure
-  // pixels. Session-only, as specified — no persistence across reloads.
+  // Session-only split state, no persistence across reloads.
   const rightPanelRef = useRef(null)
   const [topPx, setTopPx] = useState(null)
-  const [fitKey, setFitKey] = useState(0)     // bumped on drag-end to re-fitView the graph
+  const [fitKey, setFitKey] = useState(0)
   const draggingRef = useRef(false)
 
   useEffect(() => {
@@ -73,13 +66,12 @@ export function ChallengePage() {
     e.currentTarget.releasePointerCapture(e.pointerId)
     document.body.style.cursor = ''
     document.body.style.userSelect = ''
-    setFitKey(k => k + 1)  // snap the kill-chain graph to re-fit its new size
+    setFitKey(k => k + 1)
   }, [])
 
-  // Live captures land here instantly (by challenge id) so the graph doesn't
-  // have to wait on the `challenges` query refetch to reflect a just-solved
-  // flag. `moduleData`'s own `c.solved` is the PERMANENT source (survives a
-  // reload) — this set only covers the gap until that refetch completes.
+  // Live captures land here instantly by challenge id; moduleData's own
+  // `c.solved` is the permanent source (survives a reload) — this set only
+  // covers the gap until that refetch completes.
   const [locallyCaptured, setLocallyCaptured] = useState(() => new Set())
 
   const { data: moduleData, isLoading } = useChallengeModule(Number(id))
@@ -94,11 +86,7 @@ export function ChallengePage() {
     [locallyCaptured]
   )
 
-  // A layer is only "compromised" once EVERY challenge in it is solved — the
-  // web layer holds two flags (sqli-login + sqli-broken-access) and the
-  // container layer holds three (sqli-ssh-pivot, sqli-privesc-root,
-  // sqli-docker-misconfig), so capturing just one must not fully compromise
-  // the node.
+  // A layer is only "compromised" once every challenge in it is solved.
   const webSolvedCount       = webChallenges.filter(isSolved).length
   const webProgress          = webChallenges.length ? webSolvedCount / webChallenges.length : 0
   const webComplete          = webChallenges.length > 0 && webSolvedCount === webChallenges.length
@@ -107,14 +95,11 @@ export function ChallengePage() {
   const containerComplete    = containerChallenges.length > 0 && containerSolvedCount === containerChallenges.length
   const cloudComplete        = cloudChallenges.length > 0 && cloudChallenges.every(isSolved)
 
-  // Stage: 0=none, 1=web done, 2=container done, 3=all done
+  // 0=none, 1=web done, 2=container done, 3=all done
   const stage = cloudComplete ? 3 : containerComplete ? 2 : webComplete ? 1 : 0
 
-  // One row per CHALLENGE (not per layer) for the Flag panel, in module order
-  // (web flags first, then container, then cloud) — this is what surfaces
-  // both web flags as separate rows instead of one overwriting the other.
-  // Falls back to a permanent-solved placeholder when there's no live raw
-  // value yet (e.g. a reload), so hydration and live capture render the same.
+  // One row per challenge (not per layer), in module order, so both web
+  // flags surface as separate rows instead of one overwriting the other.
   const flagRows = allChallenges.map((c, i) => ({
     id:    c.id,
     label: `Flag ${i + 1}`,
@@ -122,20 +107,17 @@ export function ChallengePage() {
     value: capturedFlags[c.id] ?? (isSolved(c) ? '[already captured]' : null),
   }))
 
-  // Which challenge SLUGS are solved — the Brief objectives key off the
-  // specific flag they describe, not an aggregate layer, so Flag 1 alone
-  // ticks its own objectives immediately without waiting on Flag 2.
+  // The Brief's objectives key off the specific flag they describe, not an
+  // aggregate layer, so Flag 1 alone ticks its own objectives immediately.
   const solvedSlugs = new Set(allChallenges.filter(isSolved).map(c => c.slug))
 
-  // Every flag in the module, normalised for the Hints tab — hints are
-  // per-flag (unlike the Solution tab, which covers the whole module), so
-  // it needs the full list, not just the module's primary/entry challenge.
+  // Hints are per-flag (unlike the Solution tab, which covers the whole
+  // module), so this needs the full list, not just the entry challenge.
   const hintChallenges = allChallenges.map(c => ({
     id: c.id, slug: c.slug, title: c.title, layer: LAYER_KEY[c.layer], solved: isSolved(c),
   }))
 
-  // All hooks must run on every render regardless of the redirect checks
-  // below, so this is declared before the early returns.
+  // Declared before the early returns below since hooks must run on every render.
   const handleFlagCaptured = useCallback(({ flag, challengeId }) => {
     setCapturedFlags(prev => ({ ...prev, [challengeId]: flag }))
     setLocallyCaptured(prev => {
@@ -144,12 +126,10 @@ export function ChallengePage() {
       return next
     })
 
-    // Refresh scores + the permanent per-challenge solved state in TanStack Query cache
     queryClient.invalidateQueries({ queryKey: ['scores', 'me'] })
     queryClient.invalidateQueries({ queryKey: ['challenges'] })
   }, [queryClient])
 
-  // Redirect if not authenticated or no session
   if (!isAuthenticated) return <Navigate to="/login" replace />
   if (!sessionId) return <Navigate to="/dashboard" replace />
 
@@ -159,20 +139,16 @@ export function ChallengePage() {
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden">
 
-      {/* Top bar */}
       <TopBar
         challenge={challenge}
         stage={stage}
         expiresAt={expiresAt}
       />
 
-      {/* Main content */}
       <div className="flex-1 flex overflow-hidden">
 
-        {/* LEFT PANE — Terminal */}
         <div className="w-1/2 flex flex-col border-r border-border">
 
-          {/* Terminal header bar */}
           <div className="h-9 flex items-center justify-between px-3
                           bg-surface-2 border-b border-border flex-shrink-0">
             <span className="text-success text-xs font-mono">
@@ -190,7 +166,6 @@ export function ChallengePage() {
             </div>
           </div>
 
-          {/* xterm.js mounts here — flex-1 gives it all remaining height */}
           <div className="flex-1 overflow-hidden">
             {sessionId && token && (
               <TerminalPane
@@ -204,7 +179,6 @@ export function ChallengePage() {
             )}
           </div>
 
-          {/* Command input bar at bottom */}
           <div className="h-11 flex items-center gap-2 px-3
                           border-t border-border bg-surface flex-shrink-0">
             <span className="text-success text-xs font-mono">$</span>
@@ -214,8 +188,7 @@ export function ChallengePage() {
               className="flex-1 bg-transparent text-text-2 text-sm
                          placeholder:text-text-3 outline-none font-mono"
               onKeyDown={(e) => {
-                // The terminal handles its own input via xterm.js
-                // This input bar is decorative — real input goes to xterm
+                // Decorative — real input goes to xterm.js.
                 e.preventDefault()
               }}
             />
@@ -225,10 +198,8 @@ export function ChallengePage() {
           </div>
         </div>
 
-        {/* RIGHT PANE — Kill chain + mission brief */}
         <div ref={rightPanelRef} className="w-1/2 flex flex-col overflow-hidden">
 
-          {/* Kill chain graph — draggable-height section, ~60% to start */}
           <div className="flex flex-col overflow-y-auto"
                style={{
                  flexBasis:  topPx != null ? `${topPx}px` : '60%',
@@ -245,20 +216,15 @@ export function ChallengePage() {
               </span>
             </div>
 
-            {/* React Flow graph — key bumps on drag-end so it remounts and
-                re-runs fitView against its new box, instead of staying
-                fit to whatever size it was before the resize. */}
+            {/* key bumps on drag-end so the graph remounts and re-runs
+                fitView against its new box */}
             <div className="flex-1 px-2" style={{ minHeight: 0 }}>
               <KillChainGraph key={fitKey} stage={stage} webProgress={webProgress} containerProgress={containerProgress} />
             </div>
 
-            {/* Flag status rows */}
             <FlagStatusRow flags={flagRows} />
           </div>
 
-          {/* Drag handle — resizes the split above/below it. Purely a
-              layout change: nothing here unmounts the terminal (a sibling
-              in a completely separate pane) or the tab content underneath. */}
           <div
             onPointerDown={handleDividerPointerDown}
             onPointerMove={handleDividerPointerMove}
@@ -274,7 +240,6 @@ export function ChallengePage() {
             <GripHorizontal size={13} className="text-text-3 group-hover:text-accent transition-colors" />
           </div>
 
-          {/* Mission brief — remaining height */}
           <div className="flex-1 border-t border-border overflow-hidden flex flex-col"
                style={{ minHeight: 0 }}>
             <MissionBrief

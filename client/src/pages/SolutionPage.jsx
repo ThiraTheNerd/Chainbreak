@@ -5,17 +5,10 @@ import { useSolutionUnlockStatus }   from '@/hooks/useSolutionUnlock'
 import { getSolution }               from '@/lib/solutions'
 import { SolutionWalkthrough }       from '@/components/solution/SolutionWalkthrough'
 
-// Standalone full-page view of a challenge's solution — kept as a secondary
-// path alongside MissionBrief's in-panel Solution tab (the primary one,
-// which keeps the terminal visible). Both share the exact same rendering
-// (SolutionWalkthrough) so there's one source of truth for how a solution
-// renders; this page only adds page-level chrome (back nav, loading /
-// not-found / locked states) around it.
-//
-// Gated the same way as the in-panel tab: access is 'completed' (every flag
-// in the module solved — free), 'paid' (a solution_unlocks row exists), or
-// 'locked'. Someone navigating straight to this URL without either sees
-// the lock, same as the in-panel tab would show them.
+// A secondary path alongside MissionBrief's in-panel Solution tab (the
+// primary one, which keeps the terminal visible) — both share the same
+// SolutionWalkthrough renderer and the same access gating, so this page
+// only adds page-level chrome around it.
 export function SolutionPage() {
   const { id } = useParams()
   const navigate = useNavigate()

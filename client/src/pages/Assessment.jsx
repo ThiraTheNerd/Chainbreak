@@ -7,7 +7,6 @@ import { CONFIDENCE_ITEMS, CONFIDENCE_SCALE } from '@/lib/confidenceItems'
 import { SUS_ITEMS, SUS_SCALE }               from '@/lib/susItems'
 import { MyResultsSummary } from '@/components/assessment/MyResultsSummary'
 
-// Determine which section a question belongs to
 function getSection(questionId) {
   if (questionId <= 10)  return 'web'
   if (questionId <= 23)  return 'container'
@@ -26,12 +25,10 @@ const PHASE_LABELS = {
   sus:        'Usability survey (SUS)',
 }
 
-// Which section are we currently in
 function currentSection(questionId) {
   return getSection(questionId)
 }
 
-// Shared 1–5 Likert row used by both the confidence and SUS steps.
 function LikertRow({ text, scale, value, onChange, disabled }) {
   return (
     <div className="bg-surface border border-border rounded-xl p-5">
@@ -86,11 +83,8 @@ function StepHeader({ phaseIndex, totalPhases, phase, timerFormatted, timerUrgen
 export function Assessment() {
   const [type, setType] = useState(null)   // 'pre' | 'post' | null
 
-  // Own canonical pre/post results — powers the "Your results" summary on
-  // the type-selection screen below. Fetched unconditionally (not just when
-  // !type) so it's ready the moment the user lands back here after
-  // submitting, and refetched (via invalidation, see useAssessment's
-  // submit) so a fresh submission shows up immediately.
+  // Fetched unconditionally (not just when !type) so it's ready the moment
+  // the user lands back here after submitting.
   const { data: myAssessments, isLoading: loadingMine } = useMyAssessments()
   const myPre  = myAssessments?.assessments?.find(a => a.type === 'pre')
   const myPost = myAssessments?.assessments?.find(a => a.type === 'post')
@@ -109,7 +103,6 @@ export function Assessment() {
     submit, isSubmitting, submitError,
   } = assessment
 
-  // Type selection screen
   if (!type) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6">
@@ -148,7 +141,6 @@ export function Assessment() {
     )
   }
 
-  // Results screen
   if (submitted && results) {
     const { scores, confidence, sus } = results
     const confidenceAvg = confidence?.length
@@ -221,7 +213,6 @@ export function Assessment() {
     )
   }
 
-  // ── Confidence step ────────────────────────────────────────────────────
   if (phase === 'confidence') {
     return (
       <div className="max-w-2xl mx-auto p-6">
@@ -293,7 +284,6 @@ export function Assessment() {
     )
   }
 
-  // ── SUS step (post only) ───────────────────────────────────────────────
   if (phase === 'sus') {
     return (
       <div className="max-w-2xl mx-auto p-6">
@@ -352,7 +342,6 @@ export function Assessment() {
     )
   }
 
-  // ── Knowledge step (existing 33-question flow) ──────────────────────────
   const section     = currentSection(currentQ.id)
   const progress    = ((currentIndex + 1) / totalQ) * 100
   const selectedAns = answers[currentQ.id]
@@ -363,13 +352,11 @@ export function Assessment() {
       <StepHeader phaseIndex={phaseIndex} totalPhases={totalPhases} phase={phase}
                   timerFormatted={timerFormatted} timerUrgent={timerUrgent} timeUp={timeUp} />
 
-      {/* Question count within the knowledge step */}
       <p className="text-text-2 text-sm mb-2">
         <span className="text-accent">{SECTION_LABELS[section]}</span>
         {' · '}Question {currentIndex + 1} of {totalQ}
       </p>
 
-      {/* Progress bar */}
       <div className="w-full h-1 bg-surface-2 rounded-full mb-4 overflow-hidden">
         <div
           className="h-full bg-accent rounded-full transition-all duration-300"
@@ -377,7 +364,6 @@ export function Assessment() {
         />
       </div>
 
-      {/* Section pills */}
       <div className="flex items-center gap-2 mb-6">
         {SECTIONS.map(s => (
           <span
@@ -396,7 +382,6 @@ export function Assessment() {
         ))}
       </div>
 
-      {/* Question card */}
       <div className="bg-surface border border-border rounded-xl p-6 mb-4">
         <p className="text-text-3 text-xs font-mono mb-2">
           Q{String(currentQ.id).padStart(2,'0')}
@@ -405,7 +390,6 @@ export function Assessment() {
           {currentQ.text}
         </p>
 
-        {/* Options */}
         <div className="flex flex-col gap-2">
           {currentQ.options.map(opt => {
             const isSelected = selectedAns === opt.id
@@ -422,7 +406,6 @@ export function Assessment() {
                             }
                             disabled:opacity-50 disabled:cursor-not-allowed`}
               >
-                {/* Radio circle */}
                 <div className={`w-5 h-5 rounded-full border-2 flex items-center
                                   justify-center flex-shrink-0 transition-all
                                   ${isSelected
@@ -434,7 +417,6 @@ export function Assessment() {
                   )}
                 </div>
 
-                {/* Letter badge */}
                 <span className={`w-5 h-5 rounded text-[10px] font-mono
                                    flex items-center justify-center flex-shrink-0
                                    ${isSelected ? 'bg-accent text-white' : 'bg-surface text-text-3'}`}>
@@ -448,7 +430,6 @@ export function Assessment() {
         </div>
       </div>
 
-      {/* Navigation row */}
       <div className="flex items-center justify-between">
         <button
           onClick={goPrev}
@@ -461,7 +442,7 @@ export function Assessment() {
           ← Previous
         </button>
 
-        {/* Dot navigator — blue=current, green=answered, grey=unanswered */}
+        {/* blue=current, green=answered, grey=unanswered */}
         <div className="flex items-center gap-1 flex-wrap
                         max-w-[240px] justify-center">
           {questionBank.map((q, i) => (
@@ -505,7 +486,6 @@ export function Assessment() {
         )}
       </div>
 
-      {/* Progress summary */}
       <p className="text-text-3 text-xs text-center mt-3">
         {answeredCount} of {totalQ} answered
         {answeredCount < totalQ &&

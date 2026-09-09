@@ -22,7 +22,6 @@ export default {
         warning:     '#D29922',
         danger:      '#F85149',
         purple:      '#BC8CFF',
-        // Layer colours
         'layer-web':       '#388BFD',
         'layer-container': '#2EA043',
         'layer-cloud':     '#D29922',

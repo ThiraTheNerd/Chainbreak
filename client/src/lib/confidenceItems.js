@@ -1,8 +1,5 @@
-// src/lib/confidenceItems.js
-// Fixed 5-item self-efficacy / confidence Likert, administered both pre and
-// post with identical wording so the two sets of responses are directly
-// comparable. Do not add, remove, or reword items — that breaks the
-// pre/post pairing for anyone already assessed.
+// Do not add, remove, or reword items — that breaks the pre/post pairing
+// for anyone already assessed.
 
 export const CONFIDENCE_SCALE = [
   { value: 1, label: 'Strongly disagree' },

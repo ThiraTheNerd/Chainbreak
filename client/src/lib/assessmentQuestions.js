@@ -1,11 +1,4 @@
-// src/lib/assessmentQuestions.js
-// 33-question pre/post skill assessment for ChainBreak.
-// Section A (1-10): Web application security
-// Section B (11-23): Container security
-// Section C (24-33): Cloud security
-//
-// Correct answers marked with correct: true on each option.
-// The backend answer key in routes/assessment.js must match these.
+// The backend answer key in routes/assessment.js must match these ids exactly.
 
 export const SECTIONS = [
   { id: 'web',       label: 'Web security (1–10)',       range: [1,  10] },
@@ -15,7 +8,6 @@ export const SECTIONS = [
 
 export const QUESTIONS = [
 
-  // ── Section A: Web application security ─────────────────────────────────
 
   {
     id: 1, section: 'web',
@@ -118,7 +110,6 @@ export const QUESTIONS = [
     ],
   },
 
-  // ── Section B: Container security ──────────────────────────────────────
 
   {
     id: 11, section: 'container',
@@ -251,7 +242,6 @@ export const QUESTIONS = [
     ],
   },
 
-  // ── Section C: Cloud security ────────────────────────────────────────────
 
   {
     id: 24, section: 'cloud',
@@ -356,7 +346,6 @@ export const QUESTIONS = [
 ]
 export const POST_QUESTIONS = [
 
-  // ── Section A: Web application security ─────────────────────────────────
 
   {
     id: 1, section: 'web',
@@ -459,7 +448,6 @@ export const POST_QUESTIONS = [
     ],
   },
 
-  // ── Section B: Container security ──────────────────────────────────────
 
   {
     id: 11, section: 'container',
@@ -592,7 +580,6 @@ export const POST_QUESTIONS = [
     ],
   },
 
-  // ── Section C: Cloud security ────────────────────────────────────────────
 
   {
     id: 24, section: 'cloud',

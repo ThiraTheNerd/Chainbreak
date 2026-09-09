@@ -7,12 +7,8 @@ import { SusGauge } from '@/components/analytics/SusGauge'
 import { HintDepthChart } from '@/components/analytics/HintDepthChart'
 import { HintSourceBreakdown } from '@/components/analytics/HintSourceBreakdown'
 
-// Admin-only, read-only research analytics over REAL data (GET
-// /api/admin/analytics — gated the same way as the existing hint research
-// export, GET /api/hints/research; see server/routes/admin.js). Every
-// number rendered here is a live DB aggregate computed the same way the
-// Python pipeline in analysis/ computes it — see
-// server/services/analytics.service.js for the metric-by-metric mapping.
+// Every number here is a live DB aggregate computed the same way the Python
+// pipeline in analysis/ computes it (see server/services/analytics.service.js).
 // This page never fabricates a value: insufficient real data renders as an
 // honest "awaiting study data" state, never a zeroed or placeholder chart.
 export function ResearchAnalytics() {
@@ -45,7 +41,6 @@ export function ResearchAnalytics() {
         </div>
       )}
 
-      {/* Summary stat row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
         <StatCard
           label="Complete pre/post pairs"
@@ -77,7 +72,6 @@ export function ResearchAnalytics() {
         />
       </div>
 
-      {/* RQ1 — learning gain */}
       <SectionCard title="RQ1 — Learning gain by domain" icon={TrendingUp}>
         {isLoading
           ? <div className="h-[220px] bg-surface-2 rounded animate-pulse" />
@@ -86,7 +80,6 @@ export function ResearchAnalytics() {
       </SectionCard>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* RQ1 usability — SUS */}
         <SectionCard title="RQ1 — Usability (SUS)" icon={GaugeIcon}>
           {isLoading
             ? <div className="h-[140px] bg-surface-2 rounded animate-pulse" />
@@ -94,7 +87,6 @@ export function ResearchAnalytics() {
           }
         </SectionCard>
 
-        {/* RQ3 — hint usage */}
         <SectionCard
           title="RQ3 — Hint usage"
           icon={Lightbulb}

@@ -13,11 +13,9 @@ export function Dashboard() {
 
   const modules = challengeData?.modules || []
 
-  // Real totals, derived from the loaded data — no hardcoded counts.
   const totalFlags   = challengeData?.raw?.length ?? 0
   const totalModules = modules.length
 
-  // Distinct solved challenges (can't double-count — one entry per challenge).
   const flagsCaptured = useMemo(() => {
     if (!challengeData?.raw) return 0
     return challengeData.raw.filter(c => c.solved).length
@@ -33,7 +31,6 @@ export function Dashboard() {
   return (
     <div className="p-6 max-w-[1200px] mx-auto">
 
-      {/* Page header */}
       <div className="flex items-start justify-between mb-6">
         <div>
           <h1 className="text-text-1 text-2xl font-semibold">Challenges</h1>
@@ -50,7 +47,6 @@ export function Dashboard() {
         </div>
       </div>
 
-      {/* Stats row */}
       <div className="grid grid-cols-3 gap-4 mb-8">
         <StatCard
           label="Flags captured"
@@ -75,7 +71,6 @@ export function Dashboard() {
         />
       </div>
 
-      {/* Challenge modules grid */}
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-text-1 font-medium">Challenge modules</h2>
         <span className="text-text-3 text-xs">

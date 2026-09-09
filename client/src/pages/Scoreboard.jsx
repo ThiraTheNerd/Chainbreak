@@ -14,7 +14,7 @@ const ROLE_LABEL = {
 export function Scoreboard() {
   const { user }      = useAuth()
   const { data: raw = [], isLoading, isError } = useLeaderboard()
-  const [filter, setFilter] = useState('all')   // 'all' | 'participant' | 'practitioner'
+  const [filter, setFilter] = useState('all')
   const [search, setSearch] = useState('')
 
   const entries = useMemo(() => {
@@ -42,8 +42,6 @@ export function Scoreboard() {
 
   return (
     <div className="p-6 max-w-[1100px] mx-auto">
-
-      {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div>
           <h1 className="text-text-1 text-2xl font-semibold">Scoreboard</h1>
@@ -52,8 +50,6 @@ export function Scoreboard() {
           </p>
         </div>
       </div>
-
-      {/* Filter + search bar */}
       <div className="flex items-center justify-between mb-6 gap-4">
         <FilterBar value={filter} onChange={setFilter} />
         <div className="relative">
@@ -75,15 +71,11 @@ export function Scoreboard() {
           Failed to load leaderboard.
         </div>
       )}
-
-      {/* Podium — top 3 */}
       {!isLoading && top3.length >= 1 && (
         <div className="mb-8">
           <Podium entries={top3} />
         </div>
       )}
-
-      {/* Full table */}
       {isLoading
         ? <LeaderboardSkeleton />
         : <LeaderboardTable entries={entries} />

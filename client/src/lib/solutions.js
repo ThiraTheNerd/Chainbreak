@@ -27,11 +27,9 @@
 //   }
 
 export const SOLUTIONS = {
-  // ── Challenge 1 — reference implementation ──────────────────────────────
-  // Every command and expected-result block below was run against the real
-  // built challenge (a live chainbreak-challenge-1 target paired with its
-  // workstation container) and is copied verbatim from the actual output —
-  // not reconstructed from memory.
+  // Every command and expected-result block below was copied verbatim from
+  // a real run against a live chainbreak-challenge-1 target, not
+  // reconstructed from memory.
   'chainbreak-challenge-1': {
     title: 'Challenge 1 — SQL Injection to Cloud Credential Pivot',
     subtitle:
@@ -267,8 +265,6 @@ These are the credentials that bridge into the cloud layer below.`,
         ],
       },
       cloud: {
-        // Not built yet — see note. Leave `steps` empty rather than
-        // fabricating commands that don't work against any real target.
         comingSoon: true,
         note:
           'The cloud layer (using the credentials leaked in Step 7 to ' +
@@ -281,16 +277,11 @@ These are the credentials that bridge into the cloud layer below.`,
     },
   },
 
-  // ── Challenge 2 — four web vulns on one app, then a container escape ────
-  // Every command and expected-result block below was run against the real
-  // built challenge (a standalone chainbreak-challenge-2 target on the same
-  // kind of per-session network as production — target aliased
-  // web-challenge-2, workstation aliased workstation) and is copied
-  // verbatim from the actual output, including a full reverse-shell RCE
-  // fired end-to-end — not reconstructed from memory. `remediation` is an
-  // optional field (see the STEP SHAPE note above) used here for the first
-  // time; SolutionWalkthrough renders it only when present, so Challenge
-  // 1's steps (which don't set it) are unaffected.
+  // Every command and expected-result block below was copied verbatim from
+  // a real run against a standalone chainbreak-challenge-2 target,
+  // including a full reverse-shell RCE fired end-to-end. `remediation` is
+  // an optional field (see the STEP SHAPE note above); SolutionWalkthrough
+  // renders it only when present, so Challenge 1's steps are unaffected.
   'chainbreak-challenge-2': {
     title: 'Challenge 2 — Four Web Vulnerabilities to Container Root',
     subtitle:
@@ -560,8 +551,6 @@ flag{container_root_escalation}`,
         ],
       },
       cloud: {
-        // Not built yet — see note. Leave `steps` empty rather than
-        // fabricating commands that don't work against any real target.
         comingSoon: true,
         note:
           'Challenge 2 does not have a cloud layer yet — no infrastructure ' +

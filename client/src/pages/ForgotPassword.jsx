@@ -64,8 +64,6 @@ export function ForgotPassword() {
               {forgotMutation.data.message}
             </div>
 
-            {/* Dev-mode only: no email provider is configured yet, so the
-                backend hands back the reset link directly for local testing. */}
             {forgotMutation.data.resetUrl && (
               <div className="bg-warning/10 border border-warning/30 rounded-lg
                               px-3 py-2 text-text-2 text-xs break-all">

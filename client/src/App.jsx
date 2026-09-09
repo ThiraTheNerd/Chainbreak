@@ -45,13 +45,11 @@ export default function App() {
       <AuthProvider>
         <BrowserRouter>
           <Routes>
-            {/* Public */}
             <Route path="/login"           element={<Login />} />
             <Route path="/register"        element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password"  element={<ResetPassword />} />
 
-            {/* Protected */}
             <Route path="/dashboard" element={
               <ProtectedRoute>
                 <AppLayout><Dashboard /></AppLayout>
@@ -90,7 +88,6 @@ export default function App() {
               </ProtectedRoute>
             } />
 
-            {/* Placeholder routes — implemented in later phases */}
             <Route path="/hints" element={
               <ProtectedRoute>
                 <AppLayout><Placeholder label="Hints used — Phase 5" /></AppLayout>
@@ -122,7 +119,6 @@ export default function App() {
               </AdminRoute>
             } />
 
-            {/* Redirect root */}
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>

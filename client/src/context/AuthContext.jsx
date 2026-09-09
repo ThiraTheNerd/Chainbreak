@@ -6,9 +6,8 @@ export const AuthContext = createContext(null)
 export function AuthProvider({ children }) {
   const [user,  setUser]    = useState(null)
   const [token, setToken]   = useState(null)
-  const [loading, setLoading] = useState(true) // checking session on mount
+  const [loading, setLoading] = useState(true)
 
-  // On mount: try to restore session from sessionStorage
   useEffect(() => {
     const savedToken = sessionStorage.getItem('cb_token')
     if (!savedToken) {
@@ -16,8 +15,8 @@ export function AuthProvider({ children }) {
       return
     }
     const cachedUser = JSON.parse(sessionStorage.getItem('cb_user') || 'null')
-    // Verify the token is still valid. GET /auth/me only returns { id, role },
-    // so merge onto the cached user rather than overwrite (loses username/email).
+    // GET /auth/me only returns { id, role }, so merge onto the cached user
+    // rather than overwrite (loses username/email).
     setAuthToken(savedToken)
     api.get('/auth/me')
       .then(({ data }) => {
