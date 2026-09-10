@@ -9,6 +9,7 @@ import path from 'path'
 const apiProxyTarget = process.env.VITE_API_PROXY_TARGET || 'http://localhost:3000'
 
 export default defineConfig({
+  base: '/', // Ensures assets resolve from root domain
   plugins: [react()],
   resolve: {
     alias: {

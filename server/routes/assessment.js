@@ -50,6 +50,15 @@ router.post('/', async (req, res) => {
   if (!['pre','post'].includes(type)) {
     return res.status(400).json({ error: 'type must be pre or post' })
   }
+  if (type === 'post' && req.user?.role !== 'admin') {
+    const [[{ count }]] = await pool.execute(
+      `SELECT COUNT(*) AS count FROM assessments WHERE user_id = ? AND type = 'pre'`,
+      [req.user.id]
+    )
+    if (count === 0) {
+      return res.status(403).json({ error: 'Complete the pre-assessment before starting the post-assessment' })
+    }
+  }
   if (!Array.isArray(answers) || answers.length === 0) {
     return res.status(400).json({ error: 'answers array is required' })
   }

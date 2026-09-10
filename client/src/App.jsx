@@ -5,6 +5,7 @@ import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
 import { AdminRoute }     from '@/components/layout/AdminRoute'
 import { ConsentGate }    from '@/components/layout/ConsentGate'
 import { AppLayout }      from '@/components/layout/AppLayout'
+import { Toaster }        from '@/components/ui/toaster'
 import { Login }          from '@/pages/Login'
 import { Register }       from '@/pages/Register'
 import { Consent }        from '@/pages/Consent'
@@ -46,6 +47,7 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+        <Toaster />
         <BrowserRouter>
           <Routes>
             <Route path="/login"           element={<Login />} />

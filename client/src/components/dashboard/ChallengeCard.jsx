@@ -4,6 +4,8 @@ import { useMutation } from '@tanstack/react-query'
 import { ArrowRight, Clock3, Flag, Loader2 } from 'lucide-react'
 import { LayerBadge } from './LayerBadge'
 import { useChallengeProgress } from '@/hooks/useChallengeProgress'
+import { useMyAssessments } from '@/hooks/useMyAssessments'
+import { useToast } from '@/hooks/use-toast'
 import api from '@/services/api'
 
 function getCategoryColor(category = '') {
@@ -38,6 +40,15 @@ export function ChallengeCard({ module }) {
   const hasProgress = webSolved || containerSolved || cloudSolved
     || Boolean(progress?.hasActiveSession)
 
+  // Loading is treated as "allowed" — the server's requirePreAssessment
+  // middleware is the real gate; this is just UX to avoid a flash-block on
+  // first render for learners who've already completed it.
+  const { data: myAssessments, isLoading: loadingAssessments } = useMyAssessments()
+  const hasPreAssessment = loadingAssessments
+    || myAssessments?.assessments?.some(a => a.type === 'pre')
+
+  const { toast } = useToast()
+
   const startMutation = useMutation({
     mutationFn: () =>
       api.post(`/sessions/challenges/${id}/session`).then(r => r.data),
@@ -52,6 +63,18 @@ export function ChallengeCard({ module }) {
       setTimeout(() => setError(null), 4000)
     },
   })
+
+  const handleStart = () => {
+    if (!hasPreAssessment) {
+      toast({
+        variant: 'destructive',
+        title: 'Pre-assessment required',
+        description: 'Complete the pre-assessment to begin challenges.',
+      })
+      return
+    }
+    startMutation.mutate()
+  }
 
   return (
     <div className={`bg-surface border border-border rounded-xl
@@ -105,7 +128,7 @@ export function ChallengeCard({ module }) {
 
       <div className="px-5 pb-5">
         <button
-          onClick={() => startMutation.mutate()}
+          onClick={handleStart}
           disabled={startMutation.isPending || !id}
           title={!id ? 'No entry point challenge found for this module' : undefined}
           className="w-full flex items-center justify-center gap-2

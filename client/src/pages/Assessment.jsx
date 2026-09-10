@@ -1,7 +1,8 @@
 import { useState }        from 'react'
-import { Clock }           from 'lucide-react'
+import { Clock, Lock }     from 'lucide-react'
 import { useAssessment }   from '@/hooks/useAssessment'
 import { useMyAssessments } from '@/hooks/useMyAssessments'
+import { useToast }        from '@/hooks/use-toast'
 import { SECTIONS } from '@/lib/assessmentQuestions'
 import { CONFIDENCE_ITEMS, CONFIDENCE_SCALE } from '@/lib/confidenceItems'
 import { SUS_ITEMS, SUS_SCALE }               from '@/lib/susItems'
@@ -88,6 +89,8 @@ export function Assessment() {
   const { data: myAssessments, isLoading: loadingMine } = useMyAssessments()
   const myPre  = myAssessments?.assessments?.find(a => a.type === 'pre')
   const myPost = myAssessments?.assessments?.find(a => a.type === 'post')
+  const postLocked = !loadingMine && !myPre
+  const { toast } = useToast()
 
   const assessment = useAssessment(type || 'pre')
   const {
@@ -120,20 +123,39 @@ export function Assessment() {
           {[
             { id:'pre',  label:'Pre-session assessment',  sub:'Knowledge + confidence — before using ChainBreak' },
             { id:'post', label:'Post-session assessment', sub:'Knowledge + confidence + usability — after completing challenges' },
-          ].map(t => (
-            <button
-              key={t.id}
-              onClick={() => setType(t.id)}
-              className="w-60 p-5 bg-surface border border-border rounded-xl
-                         text-left hover:border-accent hover:bg-accent/5
-                         transition-all group"
-            >
-              <p className="text-text-1 font-medium mb-1 group-hover:text-accent">
-                {t.label}
-              </p>
-              <p className="text-text-3 text-xs">{t.sub}</p>
-            </button>
-          ))}
+          ].map(t => {
+            const locked = t.id === 'post' && postLocked
+            return (
+              <button
+                key={t.id}
+                onClick={() => {
+                  if (locked) {
+                    toast({
+                      variant: 'destructive',
+                      title: 'Pre-assessment required',
+                      description: 'Complete the pre-assessment before starting the post-assessment.',
+                    })
+                    return
+                  }
+                  setType(t.id)
+                }}
+                title={locked ? 'Complete the pre-assessment first' : undefined}
+                className={`w-60 p-5 bg-surface border border-border rounded-xl
+                           text-left transition-all group
+                           ${locked
+                             ? 'opacity-50 cursor-not-allowed'
+                             : 'hover:border-accent hover:bg-accent/5'
+                           }`}
+              >
+                <p className={`text-text-1 font-medium mb-1 flex items-center gap-1.5
+                               ${!locked && 'group-hover:text-accent'}`}>
+                  {t.label}
+                  {locked && <Lock size={13} className="text-text-3" />}
+                </p>
+                <p className="text-text-3 text-xs">{t.sub}</p>
+              </button>
+            )
+          })}
         </div>
 
         <MyResultsSummary pre={myPre} post={myPost} isLoading={loadingMine} />
