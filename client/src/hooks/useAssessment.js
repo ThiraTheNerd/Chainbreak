@@ -16,20 +16,16 @@ export function useAssessment(type = 'pre') {
   const [phaseIndex, setPhaseIndex] = useState(0)
   const phase = phases[phaseIndex]
 
-  // Knowledge (existing 30-question flow — unchanged)
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [answers, setAnswers]           = useState({})   // { [questionId]: 'A'|'B'|'C'|'D' }
+  const [answers, setAnswers]           = useState({})
 
-  // Confidence / self-efficacy Likert (5 items, pre AND post)
-  const [confidenceRatings, setConfidenceRatings] = useState({})  // { [itemId]: 1-5 }
+  const [confidenceRatings, setConfidenceRatings] = useState({})
 
-  // SUS (10 items, post only)
-  const [susResponses, setSusResponses] = useState({})            // { [itemId]: 1-5 }
+  const [susResponses, setSusResponses] = useState({})
 
   const [submitted, setSubmitted] = useState(false)
   const [results, setResults]     = useState(null)
 
-  // 15-minute countdown, covers the whole assessment (all phases)
   const startTime = useRef(Date.now())
   const [elapsed, setElapsed] = useState(0)
   const LIMIT_SECONDS = 15 * 60
@@ -48,7 +44,6 @@ export function useAssessment(type = 'pre') {
   const timerFormatted = `${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}`
   const timerUrgent    = remaining < 60
 
-  // ── Knowledge phase ──────────────────────────────────────────────────
   // post uses a reworded question bank (same ids/correct answers as pre)
   // so participants can't just recall answer positions from the pre-test.
   const questionBank      = type === 'post' ? POST_QUESTIONS : QUESTIONS
@@ -76,7 +71,6 @@ export function useAssessment(type = 'pre') {
     setCurrentIndex(Math.max(0, Math.min(index, totalQ - 1)))
   }, [totalQ])
 
-  // ── Confidence phase ─────────────────────────────────────────────────
   const setConfidenceRating = useCallback((itemId, value) => {
     if (submitted) return
     setConfidenceRatings(prev => ({ ...prev, [itemId]: value }))
@@ -86,7 +80,6 @@ export function useAssessment(type = 'pre') {
     item => confidenceRatings[item.id] != null
   )
 
-  // ── SUS phase (post only) ────────────────────────────────────────────
   const setSusRating = useCallback((itemId, value) => {
     if (submitted) return
     setSusResponses(prev => ({ ...prev, [itemId]: value }))
@@ -96,7 +89,6 @@ export function useAssessment(type = 'pre') {
     item => susResponses[item.id] != null
   )
 
-  // ── Phase navigation ─────────────────────────────────────────────────
   const phaseComplete = { knowledge: knowledgeComplete, confidence: confidenceComplete, sus: susComplete }[phase]
   const isFirstPhase = phaseIndex === 0
   const isLastPhase  = phaseIndex === phases.length - 1
@@ -114,7 +106,6 @@ export function useAssessment(type = 'pre') {
   // "unanswered = incorrect" fallback) are all answered.
   const canSubmit = isLastPhase && phaseComplete
 
-  // ── Submission ───────────────────────────────────────────────────────
   const queryClient = useQueryClient()
   const submitMutation = useMutation({
     mutationFn: () => api.post('/assessment', {

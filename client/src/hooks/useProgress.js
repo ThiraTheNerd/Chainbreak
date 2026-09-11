@@ -1,12 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 import api from '@/services/api'
 
-// GET /api/progress/me — the extra shapes the Progress dashboard needs that
-// no existing endpoint exposes (time series, OWASP/hint-tier breakdowns,
-// last-active). XP/solvedCount on this payload are the SAME values
-// /api/scores/me returns (see server/services/progress.service.js) — this
-// hook doesn't duplicate that call, the Progress page also uses useScores()
-// directly for the top-line XP figure, same as the Dashboard does.
+// The Progress page also calls useScores() directly for the top-line XP
+// figure rather than relying on the (duplicate) value in this payload.
 export function useProgress() {
   return useQuery({
     queryKey: ['progress', 'me'],
