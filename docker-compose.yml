@@ -1,10 +1,14 @@
 services:
 
+  # Base file = local dev. Plain HTTP, no certificates required. Production
+  # adds the SSL/letsencrypt setup on top via:
+  #   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
   nginx:
     image: nginx:1.25-alpine
     container_name: chainbreak-nginx
     ports:
       - "80:80"
+      - "443:443"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
@@ -12,13 +16,22 @@ services:
       - server
     networks:
       - chainbreak-default
-    restart: unless-stopped
+    restart: always
 
   client:
     build:
       context: ./client
       dockerfile: Dockerfile
     container_name: chainbreak-client
+    ports:
+      # Bound to loopback only: reachable at localhost:5173 on a dev laptop,
+      # but on the Droplet this only binds the Droplet's own loopback — never
+      # exposed to the internet, even without a prod-specific override.
+      - "127.0.0.1:5173:5173"
+    environment:
+      # Docker service name, not "localhost" — lets Vite's own /api proxy
+      # work even when 5173 is hit directly, bypassing nginx.
+      VITE_API_PROXY_TARGET: http://server:3000
     volumes:
       - ./client:/app
       - client-node-modules:/app/node_modules
@@ -131,6 +144,7 @@ services:
     build:
       context: ./challenges/challenge-1/web
       dockerfile: Dockerfile
+    image: chainbreak-challenge-1:latest
     container_name: chainbreak-challenge-1
     hostname: web-challenge-1
     privileged: true
@@ -154,6 +168,7 @@ services:
     build:
       context: ./challenges/challenge-2
       dockerfile: Dockerfile
+    image: chainbreak-challenge-2:latest
     container_name: chainbreak-challenge-2
     hostname: web-challenge-2
     environment:
