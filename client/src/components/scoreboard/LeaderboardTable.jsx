@@ -62,7 +62,6 @@ export function LeaderboardTable({ entries }) {
   return (
     <div className="bg-surface border border-border rounded-xl overflow-hidden">
 
-      {/* Header */}
       <div className="flex items-center px-4 py-2.5 border-b border-border
                       bg-surface-2">
         {COL_HEADERS.map(h => (
@@ -74,7 +73,6 @@ export function LeaderboardTable({ entries }) {
         ))}
       </div>
 
-      {/* Rows */}
       <div>
         {entries.map((entry, idx) => {
           const layers = layerApprox(entry.solvedCount)
@@ -88,7 +86,6 @@ export function LeaderboardTable({ entries }) {
                           ${isYou ? 'border-l-2 border-l-accent bg-accent/5' : ''}
                           hover:bg-surface-2`}
             >
-              {/* Rank */}
               <div className="w-16 text-center">
                 <span className={`text-sm font-mono font-medium
                                   ${idx < 3 ? 'text-warning' : 'text-text-2'}`}>
@@ -96,7 +93,6 @@ export function LeaderboardTable({ entries }) {
                 </span>
               </div>
 
-              {/* Participant */}
               <div className="flex-1 flex items-center gap-2.5">
                 <div className="w-7 h-7 rounded-full bg-surface-2 border border-border
                                 flex items-center justify-center flex-shrink-0">
@@ -115,17 +111,14 @@ export function LeaderboardTable({ entries }) {
                 </div>
               </div>
 
-              {/* Group */}
               <div className="w-28">
                 <span className="text-text-2 text-sm">{entry.roleLabel}</span>
               </div>
 
-              {/* Flags */}
               <div className="w-32">
                 <FlagDots count={entry.solvedCount || 0} max={6} />
               </div>
 
-              {/* Layer bars */}
               <div className="w-24">
                 <MiniBar pct={layers.web} color="#388BFD" />
               </div>
@@ -136,7 +129,6 @@ export function LeaderboardTable({ entries }) {
                 <MiniBar pct={layers.cloud} color="#D29922" />
               </div>
 
-              {/* Points */}
               <div className="w-20 text-right">
                 <span className="text-accent text-sm font-medium font-mono">
                   {(entry.score || 0).toLocaleString()}

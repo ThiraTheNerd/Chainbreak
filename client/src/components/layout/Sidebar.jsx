@@ -26,10 +26,8 @@ export function Sidebar() {
     navigate('/login', { replace: true })
   }
 
-  // Initials avatar
   const initials = user?.username?.slice(0, 2).toUpperCase() || 'CB'
 
-  // Role display
   const roleLabel = {
     admin:       'Admin',
     participant: 'MSc student',
@@ -39,7 +37,6 @@ export function Sidebar() {
     <aside className="w-60 flex-shrink-0 bg-surface border-r border-border
                       flex flex-col h-full">
 
-      {/* Logo */}
       <div className="h-14 flex items-center px-4 border-b border-border">
         <Link2Off size={18} className="text-accent mr-2" />
         <span className="font-semibold text-sm">
@@ -48,7 +45,6 @@ export function Sidebar() {
         </span>
       </div>
 
-      {/* Navigation */}
       <nav className="flex-1 px-2 py-3 overflow-y-auto">
         {NAV_ITEMS.map(({ to, icon: Icon, label }) => (
           <NavLink
@@ -68,7 +64,6 @@ export function Sidebar() {
           </NavLink>
         ))}
 
-        {/* Admin link — only visible to admin */}
         {isAdmin && (
           <>
             <div className="my-2 border-t border-border" />
@@ -112,10 +107,8 @@ export function Sidebar() {
         )}
       </nav>
 
-      {/* User profile at bottom */}
       <div className="border-t border-border p-3">
         <div className="flex items-center gap-3">
-          {/* Avatar circle with initials */}
           <div className="w-8 h-8 rounded-full bg-accent/20 border border-accent/30
                           flex items-center justify-center flex-shrink-0">
             <span className="text-accent text-xs font-medium">{initials}</span>

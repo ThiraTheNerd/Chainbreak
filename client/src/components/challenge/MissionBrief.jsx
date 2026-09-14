@@ -7,16 +7,10 @@ import { HintPanel }           from '@/components/hints/HintPanel'
 import { useSolutionUnlockStatus, useUnlockSolution } from '@/hooks/useSolutionUnlock'
 import { useScores }           from '@/hooks/useScores'
 
-// Objectives, each tied to the SPECIFIC challenge (by slug) that satisfies it —
-// not to an aggregate layer. Both the owasp layer (sqli-login + sqli-broken-access)
-// and the docker/container layer (sqli-ssh-pivot + sqli-privesc-root +
-// sqli-docker-misconfig) hold more than one flag, so checking "is my own flag
-// captured" per-objective is what lets an earlier flag tick immediately
-// without waiting on the rest of its layer.
-//
-// 'sqli-container-escape' (the old deferred host-escape placeholder) no
-// longer exists as a challenge — it was repurposed into sqli-docker-misconfig
-// — so there are no objectives left referencing it.
+// Each objective is tied to the specific challenge (by slug) that satisfies
+// it, not to an aggregate layer — several layers hold more than one flag,
+// so checking "is my own flag captured" per-objective lets an earlier flag
+// tick immediately without waiting on the rest of its layer.
 const OBJECTIVES_BY_IMAGE = {
   'chainbreak-challenge-1': [
     { id: 'bypass',        label: 'Bypass authentication via SQL injection',         slug: 'sqli-login' },
@@ -46,11 +40,8 @@ const OBJECTIVES_BY_IMAGE = {
   ],
 }
 
-// Pay-to-unlock prompt shown in the Solution tab until this module's
-// walkthrough has been unlocked (a ONE-TIME XP spend — see
-// server/services/unlock.service.js for the cost formula and
-// server/repositories/unlock.repository.js for why a double-click can't
-// charge twice).
+// Shown in the Solution tab until this module's walkthrough is unlocked —
+// a one-time XP spend (see server/services/unlock.service.js).
 function SolutionLockedPanel({ cost, currentScore, onUnlock, isUnlocking, error }) {
   const canAfford = cost != null && currentScore >= cost
   return (
@@ -105,15 +96,11 @@ function ObjectiveItem({ label, done }) {
 
 export function MissionBrief({ challenge, stage, solvedSlugs, hintChallenges }) {
   const [tab, setTab] = useState('brief')
-  const objectives = OBJECTIVES_BY_IMAGE[challenge?.docker_image] ?? []   // 👈 add this
+  const objectives = OBJECTIVES_BY_IMAGE[challenge?.docker_image] ?? []
 
-  // Not stage-gated: the Solution tab is always reachable — what it shows
-  // depends on `access`, in priority order (see server/services/unlock.service.js):
-  //   'completed' — every flag in the module is solved: free, permanent,
-  //                  no charge, no lock icon, even if never paid.
-  //   'paid'      — not completed, but this user spent XP to unlock it.
-  //   'locked'    — neither yet: show the pay-to-unlock panel.
-  // Either 'completed' or 'paid' persists server-side across reloads/sessions.
+  // The Solution tab is always reachable — what it shows depends on
+  // `access` ('completed' | 'paid' | 'locked'), which persists server-side
+  // (see server/services/unlock.service.js).
   const { data: unlockStatus, isLoading: unlockLoading } = useSolutionUnlockStatus(challenge?.id)
   const unlockMutation = useUnlockSolution(challenge?.id)
   const { data: scoreData } = useScores()
@@ -128,7 +115,6 @@ export function MissionBrief({ challenge, stage, solvedSlugs, hintChallenges }) 
 
   return (
     <div className="flex flex-col h-full">
-      {/* Tabs */}
       <div className="flex items-center border-b border-border px-4 flex-shrink-0">
         {tabs.map(t => (
           <button
@@ -148,12 +134,10 @@ export function MissionBrief({ challenge, stage, solvedSlugs, hintChallenges }) 
         </span>
       </div>
 
-      {/* Tab content */}
       <div className="flex-1 overflow-y-auto p-4">
 
         {tab === 'brief' && (
           <div className="flex flex-col gap-4">
-            {/* Operation label */}
             <div>
               <p className="text-warning text-xs font-mono tracking-widest uppercase mb-1">
                 Operation: Chain Reaction — Stage {stage + 1}
@@ -166,7 +150,6 @@ export function MissionBrief({ challenge, stage, solvedSlugs, hintChallenges }) 
               </h3>
             </div>
 
-            {/* Description */}
             <p className="text-text-2 text-sm leading-relaxed">
               {challenge?.description ||
                 'Intelligence suggests the authentication query is constructed ' +
@@ -175,7 +158,6 @@ export function MissionBrief({ challenge, stage, solvedSlugs, hintChallenges }) 
                 'the container environment.'}
             </p>
 
-            {/* Objectives checklist */}
             <div className="flex flex-col gap-2">
               {objectives.map(obj => (
                 <ObjectiveItem
@@ -197,9 +179,6 @@ export function MissionBrief({ challenge, stage, solvedSlugs, hintChallenges }) 
 
         {tab === 'solution' && (
           <div className="flex flex-col gap-4">
-            {/* Back-to-brief affordance + full-page escape hatch — the tab
-                bar above already switches back to Brief, this is just an
-                explicit in-content shortcut for the same action. */}
             <div className="flex items-center justify-between">
               <button
                 onClick={() => setTab('brief')}
@@ -220,9 +199,6 @@ export function MissionBrief({ challenge, stage, solvedSlugs, hintChallenges }) 
               )}
             </div>
 
-            {/* The terminal on the left stays mounted and untouched while
-                this renders — this is purely a right-panel tab swap, same
-                as Brief/Hints, not a navigation. */}
             {unlockLoading ? (
               <p className="text-text-3 text-xs text-center py-8">Loading...</p>
             ) : unlocked ? (

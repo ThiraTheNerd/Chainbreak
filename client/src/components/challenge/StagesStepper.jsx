@@ -16,9 +16,7 @@ export function StagesStepper({ stage = 0 }) {
 
         return (
           <div key={i} className="flex items-center">
-            {/* Stage indicator */}
             <div className="flex items-center gap-1.5">
-              {/* Circle */}
               <div
                 className="w-5 h-5 rounded-full flex items-center justify-center
                            flex-shrink-0 border transition-all duration-300"
@@ -37,8 +35,6 @@ export function StagesStepper({ stage = 0 }) {
                     />
                 }
               </div>
-
-              {/* Label */}
               <div className="hidden sm:block">
                 <p
                   className="text-xs font-medium leading-none"
@@ -51,8 +47,6 @@ export function StagesStepper({ stage = 0 }) {
                 </p>
               </div>
             </div>
-
-            {/* Connector arrow */}
             {i < STAGES.length - 1 && (
               <div className="mx-2 text-text-3 text-xs">→</div>
             )}

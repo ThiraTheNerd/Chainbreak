@@ -1,7 +1,5 @@
-// Three per-layer mastery rings — reuses the SAME fractional-progress
-// definition as the kill-chain graph and lib/challenges.js's
-// layerProgress() (solved / total within that layer), just aggregated
-// across ALL modules instead of one module's layer.
+// Reuses the same fractional-progress definition as the kill-chain graph
+// and lib/challenges.js's layerProgress(), aggregated across all modules.
 const LAYERS = [
   { key: 'web',       label: 'Web',       sub: 'OWASP',   color: '#388BFD' },
   { key: 'container', label: 'Container', sub: 'Docker',  color: '#2EA043' },

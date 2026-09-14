@@ -12,10 +12,6 @@ const LAYER_COLORS = {
   cloud:     '#D29922',
 }
 
-// stage 0: all locked
-// stage 1: web=compromised, container=active, cloud=locked
-// stage 2: web=compromised, container=compromised, cloud=active
-// stage 3: all compromised
 const NODE_STATES = {
   0: { web: 'locked',      container: 'locked',      cloud: 'locked'      },
   1: { web: 'compromised', container: 'active',       cloud: 'locked'      },
@@ -25,15 +21,10 @@ const NODE_STATES = {
 
 export function KillChainGraph({ stage = 0, webProgress = 0, containerProgress = 0 }) {
   const states = NODE_STATES[stage] || NODE_STATES[0]
-  // The web layer can hold more than one flag — while it's only partially
-  // solved, `stage` hasn't advanced past 0 yet, so `states.web` would still
-  // read 'locked'. Show it as active-with-partial-progress instead, so the
-  // node reflects the fraction rather than looking untouched.
+  // A layer can hold more than one flag, so it can have partial progress
+  // while `stage` hasn't advanced past 'locked' yet — show it as active
+  // instead of looking untouched.
   const webState = states.web === 'locked' && webProgress > 0 ? 'active' : states.web
-  // Same treatment for the container layer, which now holds three flags
-  // (ssh-pivot, privesc, misconfig) — nothing stops a learner from pivoting
-  // in over SSH before finishing the web layer, so container progress can
-  // advance while `states.container` is still 'locked'.
   const containerState = states.container === 'locked' && containerProgress > 0 ? 'active' : states.container
 
   const nodes = useMemo(() => [
@@ -83,12 +74,9 @@ export function KillChainGraph({ stage = 0, webProgress = 0, containerProgress =
   ], [stage])
 
   return (
-    // Fills whatever height its parent gives it (not a fixed px value) so
-    // the graph condenses cleanly when the right-panel divider (see
-    // ChallengePage.jsx) is dragged to shrink this section, instead of
-    // being clipped at a fixed size. `fitView` re-runs whenever this
-    // component remounts — ChallengePage bumps a `key` on drag-end to
-    // trigger exactly that, snapping the graph to fit its new box.
+    // Height is relative (not fixed px) so this condenses cleanly when the
+    // right-panel divider is dragged. `fitView` re-runs on remount —
+    // ChallengePage bumps a `key` on drag-end to trigger that.
     <div style={{ height: '100%', width: '100%', minHeight: 0 }}>
       <ReactFlow
         nodes={nodes}

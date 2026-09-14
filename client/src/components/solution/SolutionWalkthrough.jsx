@@ -31,7 +31,6 @@ function SolutionStep({ step, index }) {
   const meta = LAYER_META[step.layer] || LAYER_META.web
   return (
     <div className="bg-surface border border-border rounded-xl p-5 flex flex-col gap-4">
-      {/* Header */}
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
           <p className="text-text-3 text-[11px] font-mono tracking-wide mb-1">
@@ -49,12 +48,10 @@ function SolutionStep({ step, index }) {
         )}
       </div>
 
-      {/* Vulnerability explanation */}
       <p className="text-text-2 text-sm leading-relaxed">
         {step.explanation}
       </p>
 
-      {/* Command blocks */}
       {step.commands?.length > 0 && (
         <div className="flex flex-col gap-2.5">
           {step.commands.map((cmd, i) => (
@@ -63,7 +60,6 @@ function SolutionStep({ step, index }) {
         </div>
       )}
 
-      {/* Expected result */}
       {step.expectedResult && (
         <div className="bg-surface-2 border border-border rounded-lg p-3.5">
           <p className="text-text-3 text-[11px] font-mono uppercase tracking-wide mb-2">
@@ -76,7 +72,6 @@ function SolutionStep({ step, index }) {
         </div>
       )}
 
-      {/* Remediation — optional; only rendered when a step provides it */}
       {step.remediation && (
         <div className="bg-success/5 border border-success/20 rounded-lg p-3.5">
           <p className="text-success text-[11px] font-mono uppercase tracking-wide mb-2">
@@ -88,7 +83,6 @@ function SolutionStep({ step, index }) {
         </div>
       )}
 
-      {/* Flag captured */}
       {step.flag && (
         <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border
                         ${meta.text} ${meta.borderFaint} ${meta.bg}`}>
@@ -137,13 +131,9 @@ function LayerSection({ layerKey, layer }) {
   )
 }
 
-// Shared, data-driven solution renderer — used by both the full-page
-// SolutionPage (wide, standalone) and MissionBrief's in-panel Solution tab
-// (narrower, alongside the still-mounted terminal). Takes ONLY the solution
-// data + a compact flag; gating, page chrome, and navigation all live in
-// the caller so this stays a pure "render whatever solution I'm given"
-// component, per the same generic/data-driven contract as the rest of the
-// solution feature.
+// Used by both the full-page SolutionPage and MissionBrief's in-panel
+// Solution tab; takes only the solution data + a compact flag — gating,
+// page chrome, and navigation all live in the caller.
 export function SolutionWalkthrough({ solution, compact = false }) {
   if (!solution) {
     return (

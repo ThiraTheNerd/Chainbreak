@@ -10,8 +10,7 @@ const DOMAIN_ORDER = [
 
 const CHART_HEIGHT = 140
 
-// Same bands/thresholds as analysis/learning_gain.py's interpret_g() — a
-// presentational label only, not a different computation of g.
+// Same bands/thresholds as analysis/learning_gain.py's interpret_g().
 function gainBand(g) {
   if (g === null || g === undefined) return { label: 'undefined', className: 'text-text-3' }
   if (g >= 0.7) return { label: 'high gain', className: 'text-success' }
@@ -20,10 +19,8 @@ function gainBand(g) {
   return { label: 'no/negative gain', className: 'text-danger' }
 }
 
-// Grouped pre/post % bar chart by domain, mirroring run_analysis.py's
-// fig_prepost.png exactly: mean_pre/max*100 and mean_post/max*100 per
-// domain, grey for pre and green for post. All four domains share the same
-// N (same set of complete pairs), so gating on domains.total.sufficient
+// Mirrors run_analysis.py's fig_prepost.png. All four domains share the
+// same N (same set of complete pairs), so gating on domains.total.sufficient
 // covers the whole chart.
 export function LearningGainChart({ domains, minPairsRequired = 2 }) {
   const total = domains?.total

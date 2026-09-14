@@ -8,14 +8,10 @@ const HEIGHT = 180
 const PAD_X = 12
 const PAD_Y = 16
 
-// Cumulative XP over time, from the learner's own solve history
-// (server/services/progress.service.js timeSeries — first-correct-submission
-// per challenge, same challenge set the XP figure is summed from). Points
-// are spaced evenly along X by SOLVE ORDER, not by elapsed real time — with
-// only a handful of captures, a strictly time-proportional axis tends to
-// bunch same-day solves into one corner and leave the rest of the chart
-// empty; solve order stays honest about the trajectory shape while reading
-// more clearly, and each point's real date is shown below it.
+// Points are spaced evenly along X by solve order, not by elapsed real
+// time — with only a handful of captures, a time-proportional axis tends
+// to bunch same-day solves into one corner and leave the rest empty; each
+// point's real date is still shown below it.
 export function XpTrendChart({ timeSeries }) {
   const { linePath, areaPath, points, maxXp } = useMemo(() => {
     if (!timeSeries || timeSeries.length === 0) {
@@ -44,7 +40,6 @@ export function XpTrendChart({ timeSeries }) {
     )
   }
 
-  // A single data point can't draw a line — show it as a lone dot plus its value.
   if (timeSeries.length === 1) {
     const only = timeSeries[0]
     return (

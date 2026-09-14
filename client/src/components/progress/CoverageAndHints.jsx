@@ -3,9 +3,6 @@ import { ProgressEmptyState } from './ProgressEmptyState'
 
 const TIER_LABELS = { 1: 'Tier 1 · nudge', 2: 'Tier 2 · direction', 3: 'Tier 3 · walkthrough' }
 
-// OWASP category coverage: which vulnerability categories (challenges.category)
-// the learner has solved, from the same solved-challenge set the XP total is
-// built from — surfaces breadth, not just count.
 function OwaspCoverage({ owaspCoverage }) {
   if (!owaspCoverage || owaspCoverage.length === 0) {
     return (
@@ -35,7 +32,6 @@ function OwaspCoverage({ owaspCoverage }) {
   )
 }
 
-// Hint-tier usage breakdown — how much assistance was used, and where.
 function HintBreakdown({ hintTierBreakdown, hintCount }) {
   if (!hintCount) {
     return (

@@ -1,9 +1,6 @@
 import { useState, useRef } from 'react'
 import { Copy, Check } from 'lucide-react'
 
-// Copies `code` exactly as given — no line numbers, no prompt characters,
-// no surrounding UI chrome — since that string (not anything rendered
-// around it) is what ends up on the clipboard.
 export function CodeBlock({ code, label }) {
   const [copied, setCopied] = useState(false)
   const timeoutRef = useRef(null)
@@ -12,8 +9,7 @@ export function CodeBlock({ code, label }) {
     try {
       await navigator.clipboard.writeText(code)
     } catch {
-      // Clipboard API unavailable (e.g. insecure context) — fall back to
-      // the classic hidden-textarea + execCommand trick.
+      // Clipboard API unavailable (e.g. insecure context).
       const ta = document.createElement('textarea')
       ta.value = code
       ta.style.position = 'fixed'

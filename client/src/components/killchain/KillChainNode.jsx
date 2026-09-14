@@ -30,15 +30,14 @@ const LAYER_LABELS = { web: 'WEB APP', container: 'CONTAINER', cloud: 'CLOUD' }
 const LAYER_SUBLABELS = { web: 'Login form', container: 'App container', cloud: 'AWS EC2' }
 
 export function KillChainNode({ data }) {
-  const { type, state, color, progress = 1 } = data    // type: web|container|cloud
+  const { type, state, color, progress = 1 } = data
   const Icon   = state === 'compromised' ? Check
                 : state === 'locked'     ? Lock
                 : (LAYER_ICONS[type]     || Globe)
   const styles = STATE_STYLES[String(state).toLowerCase()] || STATE_STYLES.locked
 
-  // A layer can hold more than one flag (e.g. web = sqli-login + sqli-broken-access).
-  // While it's active but not yet fully solved, trace a fractional ring instead
-  // of claiming full progress the pulsing "active" ring alone would imply.
+  // A layer can hold more than one flag; while active but not fully solved,
+  // trace a fractional ring instead of implying full progress.
   const isPartial = state === 'active' && progress > 0 && progress < 1
   const badgeText = isPartial ? `${Math.round(progress * 100)}% CAPTURED` : styles.text
 
@@ -51,13 +50,11 @@ export function KillChainNode({ data }) {
       className="flex flex-col items-center gap-2 select-none"
       style={{ color: state === 'locked' ? undefined : color }}
     >
-      {/* Handles — invisible, just for React Flow edge routing */}
       <Handle type="target" position={Position.Left}
               style={{ opacity: 0, pointerEvents: 'none' }} />
       <Handle type="source" position={Position.Right}
               style={{ opacity: 0, pointerEvents: 'none' }} />
 
-      {/* Circle node */}
       <div className="relative w-20 h-20">
         {isPartial && (
           <svg className="absolute inset-0 w-20 h-20 -rotate-90" viewBox="0 0 80 80">
@@ -79,7 +76,6 @@ export function KillChainNode({ data }) {
         </div>
       </div>
 
-      {/* Layer type label */}
       <div className="text-center">
         <p className="text-[10px] font-mono tracking-widest text-text-3 uppercase">
           {LAYER_LABELS[type]}

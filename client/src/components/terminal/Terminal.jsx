@@ -6,11 +6,11 @@ import '@xterm/xterm/css/xterm.css'
 
 export function TerminalPane({
   sessionId,
-  challengeIds,   // array of all challenge IDs in the module
+  challengeIds,
   token,
-  onFlagCaptured, // ({ flag, layer, challengeId, pointsAwarded }) => void
-  onConnected,    // () => void
-  onError,        // (message) => void
+  onFlagCaptured,
+  onConnected,
+  onError,
 }) {
   const containerRef = useRef(null)
   const termRef      = useRef(null)
@@ -28,7 +28,6 @@ export function TerminalPane({
   useEffect(() => {
     if (!containerRef.current || !sessionId || !token) return
 
-    // ── 1. Create terminal ────────────────────────────────────────────────
     const terminal = new Terminal({
       cursorBlink:  true,
       fontSize:     14,
@@ -63,10 +62,6 @@ export function TerminalPane({
 
     terminal.write('\x1b[32m[ChainBreak] Connecting to container...\x1b[0m\r\n')
 
-    // ── 2. Keystroke forwarding ─────────────────────────────────────────────
-    // Registered now, but reads socketRef (populated below, once fit settles)
-    // — a keystroke landing before the socket connects isn't realistically
-    // possible.
     terminal.onData((data) => {
       socketRef.current?.emit('terminal:input', data)
     })
@@ -74,10 +69,10 @@ export function TerminalPane({
     let disposed     = false
     let resizeTimer   = null
 
-    // Single source of truth for "measure + tell the backend": every trigger
-    // below (initial connect, the delayed post-fonts correction, and live
+    // Single source of truth for "measure + tell the backend": every
+    // trigger (initial connect, the delayed post-fonts correction, live
     // resizes) funnels through this, so the emitted cols/rows always come
-    // straight from FitAddon's own measurement — never a separate constant.
+    // from FitAddon's own measurement.
     function fitAndEmit() {
       if (disposed || !fitRef.current) return
       fitRef.current.fit()
@@ -91,25 +86,12 @@ export function TerminalPane({
       resizeTimer = setTimeout(fitAndEmit, delayMs)
     }
 
-    // The INITIAL fit — which drives the socket handshake that sets the
-    // pty's starting cols/rows — has to wait for two things, not one:
-    //  (a) layout: a bare requestAnimationFrame after mount, so the
-    //      container has real, non-zero dimensions to measure.
-    //  (b) FONTS: "JetBrains Mono" loads asynchronously (Google Fonts
-    //      @import in index.css). Measuring before it's swapped in uses the
-    //      FALLBACK font's character width — fit() computes a cols count
-    //      that's accurate for what's on screen AT THAT INSTANT but wrong
-    //      for what renders moments later once the real font swaps in. The
-    //      reported `stty size` then reflects the fallback-font measurement
-    //      forever after, while xterm visually wraps at wherever the REAL
-    //      font's (different) character width actually lands — bash's own
-    //      line-editing cursor math (driven by the pty's COLUMNS) and
-    //      xterm's actual wrap point disagree, which is exactly the
-    //      character-overwrite corruption on long lines. Short lines never
-    //      reach the mismatched column, so they always looked fine — which
-    //      is why this was so precisely reproducible.
-    // document.fonts.ready resolves once every requested font has settled
-    // (success OR fallback), so waiting on it is always safe.
+    // The initial fit has to wait on document.fonts.ready as well as layout:
+    // "JetBrains Mono" loads asynchronously, and measuring before it swaps
+    // in uses the fallback font's character width. The pty's COLUMNS would
+    // then be set from that measurement permanently, while xterm visually
+    // wraps at the real font's (different) width — the two disagree, which
+    // is what caused character-overwrite corruption on long lines.
     const fontsReady = document.fonts?.ready ?? Promise.resolve()
 
     requestAnimationFrame(() => {
@@ -119,7 +101,6 @@ export function TerminalPane({
         if (disposed) return
         fitAddon.fit()
 
-        // ── 3. Connect Socket.io — now carrying the REAL fitted size ───────
         const socket = io(window.location.origin, {
           auth: {
             token,
@@ -134,7 +115,6 @@ export function TerminalPane({
 
         socketRef.current = socket
 
-        // ── 4. Socket events ──────────────────────────────────────────────
         socket.on('connect', () => {
           terminal.write('\x1b[32m[ChainBreak] Connected\x1b[0m\r\n\r\n')
           onConnected?.()
@@ -158,12 +138,9 @@ export function TerminalPane({
           onError?.(msg)
         })
 
-        // No trailing \r\n after the last line here (or below): the server
-        // follows this event with a prompt-redraw nudge sent straight
-        // through the pty (see nudgePromptRedraw in terminal.js) — its own
-        // echoed newline is what moves the cursor down before the prompt
-        // reappears. Adding our own trailing newline here too would leave a
-        // blank line between the message and the prompt.
+        // No trailing \r\n on the last line: the server follows this event
+        // with a prompt-redraw nudge sent through the pty (nudgePromptRedraw
+        // in terminal.js), whose own echoed newline moves the cursor down.
         socket.on('flag:captured', (data) => {
           terminal.write(
             `\r\n\x1b[32m[+] Flag captured: ${data.flag}\x1b[0m\r\n` +
@@ -176,23 +153,16 @@ export function TerminalPane({
           terminal.write(`\r\n\x1b[33m[!] ${data.flag} already captured\x1b[0m`)
         })
 
-        // Belt-and-suspenders: re-measure once more shortly after connect,
-        // in case the browser hadn't fully committed the font-swap reflow
-        // right at the fonts.ready/first-paint boundary.
         scheduleFitAndEmit(300)
       })
     })
 
-    // ── 5. Resize observer ────────────────────────────────────────────────
-    // Every resize AFTER the initial one above (window resize, pane drag,
-    // etc.) — debounced so a continuous drag doesn't spam the backend.
     const observer = new ResizeObserver(() => {
       scheduleFitAndEmit()
     })
 
     observer.observe(containerRef.current)
 
-    // ── 6. Cleanup ────────────────────────────────────────────────────────
     return () => {
       disposed = true
       clearTimeout(resizeTimer)

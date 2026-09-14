@@ -12,8 +12,6 @@ export function TopBar({ challenge, stage, expiresAt, hintsUsed = 0 }) {
   return (
     <header className="h-12 flex items-center justify-between px-4
                        border-b border-border bg-surface flex-shrink-0">
-
-      {/* Left: breadcrumb */}
       <div className="flex items-center gap-2 min-w-0">
         <Link to="/dashboard"
               className="flex items-center gap-1.5 text-text-2 hover:text-text-1
@@ -35,22 +33,15 @@ export function TopBar({ challenge, stage, expiresAt, hintsUsed = 0 }) {
           {challenge?.title || 'Loading...'}
         </span>
       </div>
-
-      {/* Centre: stage stepper */}
       <div className="flex-1 flex justify-center">
         <StagesStepper stage={stage} />
       </div>
-
-      {/* Right: timer, hints, XP */}
       <div className="flex items-center gap-3 flex-shrink-0">
-        {/* Timer */}
         <div className={`flex items-center gap-1.5 font-mono text-sm
                          ${urgent ? 'text-danger' : 'text-text-2'}`}>
           <Clock size={14} />
           {expiresAt ? formatted : '--:--'}
         </div>
-
-        {/* Hints */}
         <button className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg
                            border border-warning/30 bg-warning/10
                            text-warning text-xs hover:bg-warning/20
@@ -58,8 +49,6 @@ export function TopBar({ challenge, stage, expiresAt, hintsUsed = 0 }) {
           <Lightbulb size={13} />
           Hint ({hintsUsed})
         </button>
-
-        {/* XP */}
         <div className="text-accent text-sm font-medium font-mono">
           {score.toLocaleString()} XP
         </div>

@@ -14,9 +14,7 @@ const LAYER_DOT = {
 }
 
 function HintTierRow({ tier, locked, currentScore, onReveal, isRevealing, error }) {
-  // Already revealed — show the persisted hint text (identical on every
-  // future visit, since the server stores what it generated rather than
-  // regenerating on each view).
+  // The server stores what it generated rather than regenerating on each view.
   if (tier.unlocked) {
     return (
       <div className="bg-surface-2 border border-border rounded-lg p-3">
@@ -39,8 +37,6 @@ function HintTierRow({ tier, locked, currentScore, onReveal, isRevealing, error 
     )
   }
 
-  // Locked because a prior tier hasn't been revealed yet — progressive,
-  // can't skip ahead.
   if (locked) {
     return (
       <div className="bg-surface-2/50 border border-dashed border-border
@@ -53,7 +49,6 @@ function HintTierRow({ tier, locked, currentScore, onReveal, isRevealing, error 
     )
   }
 
-  // Revealable now.
   const canAfford = currentScore >= tier.cost
   return (
     <div className="bg-surface-2 border border-border rounded-lg p-3 flex flex-col gap-2">
@@ -149,11 +144,6 @@ function HintFlagCard({ challenge, expanded, onToggle, currentScore }) {
   )
 }
 
-// AI-powered progressive hints, one flag at a time — the module's flags are
-// listed as expandable cards, each holding its own independent 3-tier
-// ladder (see HintTierLadder above). Data-driven: takes whatever challenge
-// list it's given (from ChallengePage's module data) and renders it
-// generically, same contract as SolutionWalkthrough.
 export function HintPanel({ challenges = [], currentScore = 0 }) {
   const firstUnsolvedId = challenges.find((c) => !c.solved)?.id ?? challenges[0]?.id
   const [expandedId, setExpandedId] = useState(firstUnsolvedId)
