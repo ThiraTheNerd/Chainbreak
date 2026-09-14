@@ -1,13 +1,4 @@
-"""
-make_synthetic_data.py — ⚠️ GENERATES FAKE DATA FOR PIPELINE TESTING ONLY ⚠️
 
-This creates a synthetic pre/post dataset SOLELY to demonstrate that the analysis
-scripts run correctly. THE NUMBERS ARE NOT REAL and MUST NEVER be presented as
-study findings. Delete or ignore this file's output once you have real data.
-
-Every generated file is written with an obvious _SYNTHETIC_ prefix and a header
-comment, so it cannot be mistaken for real participant data.
-"""
 
 import numpy as np
 import pandas as pd

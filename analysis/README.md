@@ -1,36 +1,3 @@
-# ChainBreak evaluation analysis
-
-Three tools for the ChainBreak evaluation study: a quantitative
-learning-gain pipeline (RQ1), a thematic-analysis support tool for
-interview data (RQ2), and a hint-usage analysis (RQ3). RQ1 and RQ2 share no
-code and can be used independently; RQ3 reuses RQ1's DB connection/
-anonymisation (`db_loader.py`) and RQ1's own learning-gain pairing to relate
-hint usage to gain — see **RQ3** below.
-
-## RQ1 — learning gain
-
-Computes pre/post learning gain: Hake's normalised gain, a paired
-significance test (t-test or Wilcoxon, chosen automatically from a
-normality check), Cohen's d effect size, a per-domain (web/container/cloud)
-breakdown, and figures.
-
-The statistics live in `learning_gain.py` and are unchanged from the tested
-version — this directory only adds real-data plumbing around them.
-
-## Files
-
-| File | What it is |
-|---|---|
-| `learning_gain.py` | RQ1 core stats: descriptives, Hake's g, paired test selection, Cohen's d, narrative. |
-| `run_analysis.py` | RQ1 runner + figures. `python run_analysis.py <csv>` or `python run_analysis.py --from-db`. |
-| `db_loader.py` | Reads REAL data from the ChainBreak MySQL `assessments` table, anonymises it, and feeds it through `learning_gain.load_scores()`. |
-| `make_synthetic_data.py` | ⚠️ Generates **fake** data for testing the RQ1 pipeline only. Never real results. |
-| `thematic_analysis.py` | RQ2 — tabulates/visualises the researcher's own thematic coding. See **RQ2** below. |
-| `interview_coding_template.csv` | RQ2 coding-sheet template with illustrative EXAMPLE rows only. |
-| `hint_loader.py` | RQ3 — reads REAL `hint_unlocks` telemetry, anonymised via `db_loader`'s shared mapping. |
-| `hint_analysis.py` | RQ3 — hint-usage description + descriptive (non-causal) association with RQ1 gain. See **RQ3** below. |
-| `requirements.txt` | Python dependencies (shared by all three tools). |
-| `.gitignore` | Keeps real/sensitive outputs and the anonymisation key out of git. |
 
 ## Setup
 
