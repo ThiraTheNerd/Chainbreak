@@ -1,11 +1,3 @@
-# Production override for the DigitalOcean Droplet (dissertation.mercythira.com).
-# Applied on top of the base file, never on its own:
-#
-#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
-#
-# Swaps nginx onto the HTTPS/redirect config and mounts the host's real
-# certbot certificate directory — both of which would break a bare
-# `docker compose up` on a laptop that has neither.
 services:
   nginx:
     volumes:
@@ -14,8 +6,11 @@ services:
       - certbot-webroot:/var/www/certbot:ro
 
   client:
-    environment:
-      VITE_API_PROXY_TARGET: http://server:5000
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      args:
+        VITE_API_PROXY_TARGET: http://server:5000
 
 volumes:
   certbot-webroot:
