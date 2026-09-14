@@ -10,10 +10,10 @@ const NAV_ITEMS = [
   { to: '/dashboard',   icon: LayoutDashboard, label: 'Dashboard'   },
   { to: '/scoreboard',  icon: Trophy,          label: 'Scoreboard'  },
   { to: '/progress',    icon: User,            label: 'My progress' },
-  { to: '/hints',       icon: Lightbulb,       label: 'Hints used'  },
+  // { to: '/hints',       icon: Lightbulb,       label: 'Hints used'  },
   { to: '/assessment',  icon: ClipboardList,   label: 'Assessment'  },
-  { to: '/components',  icon: Component,       label: 'Components'  },
-  { to: '/settings',    icon: Settings,        label: 'Settings'    },
+  // { to: '/components',  icon: Component,       label: 'Components'  },
+  // { to: '/settings',    icon: Settings,        label: 'Settings'    },
 ]
 
 export function Sidebar() {
@@ -100,7 +100,7 @@ export function Sidebar() {
               <Ticket size={16} />
               Invite codes
             </NavLink>
-            <NavLink
+            {/* <NavLink
               to="/admin"
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2 rounded-lg text-sm
@@ -113,7 +113,7 @@ export function Sidebar() {
             >
               <ShieldAlert size={16} />
               Admin panel
-            </NavLink>
+            </NavLink> */}
           </>
         )}
       </nav>
