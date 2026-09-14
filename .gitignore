@@ -154,3 +154,4 @@ vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
 ASSESSMENT_GAP_ANALYSIS.md
+server/data/backups/
