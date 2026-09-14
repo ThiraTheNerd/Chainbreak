@@ -13,7 +13,7 @@ import logger from './utils/logger.js';
 
 
 async function start() {
-  await assertConnection(); // fail fast if MySQL is unreachable
+  await assertConnection();
 
   const httpServer = http.createServer(app);
   const io = initSocket(httpServer);

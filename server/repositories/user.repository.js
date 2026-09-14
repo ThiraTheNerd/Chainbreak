@@ -1,5 +1,3 @@
-/** @file server/repositories/user.repository.js — data-access for users. Knows SQL only. */
- 
 import pool from '../db/connection.js';
  
 export async function findByEmail(email) {

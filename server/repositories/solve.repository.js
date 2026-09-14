@@ -1,4 +1,3 @@
-// file: server/repositories/solve.repository.js
 import pool from '../db/connection.js';
 
 // INSERT IGNORE + the UNIQUE key = first solve scores, replays are no-ops.

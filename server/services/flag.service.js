@@ -1,6 +1,3 @@
-
-/** @file server/services/flag.service.js — flag verification + scoring. */
- 
 import bcrypt from 'bcrypt';
 import * as challengeRepository from '../repositories/challenge.repository.js';
 import * as submissionRepository from '../repositories/submission.repository.js';
@@ -34,8 +31,3 @@ export async function submitFlag({ userId, challengeId, submittedFlag }) {
     pointsAwarded: correct && !alreadySolved ? challenge.points : 0,
   };
 }
-// function compareFlag(submitted, expectedHash) {
-//   const a = createHash('sha256').update(submitted).digest();
-//   const b = Buffer.from(expectedHash, 'hex');
-//   return a.length === b.length && timingSafeEqual(a, b);
-// }

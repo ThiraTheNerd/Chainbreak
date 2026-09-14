@@ -1,6 +1,3 @@
-
-/** @file server/routes/flags.js — /api/flags URL wiring (auth-gated). */
- 
 import { Router } from 'express';
 import * as flagController from '../controllers/flag.controller.js';
 import { authenticate } from '../middleware/auth.js';

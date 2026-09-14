@@ -1,5 +1,3 @@
-/** @file server/services/challenge.service.js — challenge catalogue business logic. */
- 
 import * as challengeRepository from '../repositories/challenge.repository.js';
 import * as submissionRepository from '../repositories/submission.repository.js';
 import * as sessionRepository from '../repositories/session.repository.js';
@@ -20,13 +18,10 @@ export async function getChallenge(id) {
   return challenge;
 }
 
-/**
- * Which flags of a challenge's module (its owasp/docker/aws siblings) this
- * user has already captured — read straight from `submissions`, so it
- * reflects PERMANENT solve state rather than any one session's lifetime.
- * Also reports whether an active session exists for the module, so the
- * dashboard can offer "Continue" without a prior solve (e.g. mid-run).
- */
+// Read straight from `submissions`, so this reflects permanent solve state
+// rather than any one session's lifetime. Also reports whether an active
+// session exists for the module, so the dashboard can offer "Continue"
+// without a prior solve.
 export async function getChallengeProgress(userId, challengeId) {
   const target = await challengeRepository.findById(challengeId);
   if (!target) throw new NotFoundError('Challenge not found');
@@ -41,10 +36,8 @@ export async function getChallengeProgress(userId, challengeId) {
   }
 
   const solved = { owasp: false, docker: false, aws: false };
-  // Flags are stored as bcrypt hashes (one-way) — the raw text is never
-  // persisted, so a solved flag can only be reported as "captured", not
-  // reproduced. Kept per-layer so the client can drop it straight into its
-  // capturedFlags state.
+  // Flags are stored as bcrypt hashes (one-way) — a solved flag can only
+  // be reported as "captured", never reproduced.
   const capturedFlagValues = { owasp: null, docker: null, aws: null };
 
   await Promise.all(

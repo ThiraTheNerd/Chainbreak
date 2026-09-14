@@ -1,19 +1,16 @@
-/** @file server/routes/challenges.js — /api/challenges (auth required). */
- 
 import { Router } from 'express';
 import * as challengeController from '../controllers/challenge.controller.js';
 import * as sessionController from '../controllers/session.controller.js';
-// import * as submissionController from '../controllers/submission.controller.js';
 import { authenticate } from '../middleware/auth.js';
 import { requireAdmin } from '../middleware/admin.js';
 import { rateLimit }    from '../middleware/rateLimit.js';
 
 const router = Router();
-router.use(authenticate); // every challenge route is gated
+router.use(authenticate);
 
-router.get('/', challengeController.listChallenges);      // ?layer=owasp|docker|aws
+router.get('/', challengeController.listChallenges); // ?layer=owasp|docker|aws
 router.get('/:id', challengeController.getOne);
-router.get('/:id/progress', challengeController.getProgress); // permanent solve state for the module
+router.get('/:id/progress', challengeController.getProgress);
 
 // Pay-to-unlock solution walkthrough — one-time per (user, module).
 router.get('/:id/solution-unlock', challengeController.getSolutionUnlockStatus);
@@ -30,9 +27,7 @@ router.post(
   challengeController.revealHint
 );
 
-// CTF mechanic — flag submission lives under the challenge it belongs to.
 router.post('/:id/start', sessionController.startChallenge);
-// router.post('/:id/submit', submissionController.submit);
 
 // Admin-only management (requireAdmin runs AFTER requireAuth, so req.user exists)
 router.post('/', requireAdmin, challengeController.create);

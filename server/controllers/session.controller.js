@@ -1,4 +1,3 @@
-// controllers/session.controller.js
 import * as sessionService from '../services/session.service.js';
 
 export async function startChallenge(req, res) {

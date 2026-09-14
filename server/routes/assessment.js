@@ -21,8 +21,6 @@ const ANSWER_KEY = {
 const CONFIDENCE_ITEM_IDS = [1, 2, 3, 4, 5]
 const SUS_ITEM_IDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
-// A valid Likert submission: exactly one {itemId, rating 1-5} entry per
-// expected id, no duplicates, no strays.
 function validateLikertArray(arr, expectedIds) {
   if (!Array.isArray(arr) || arr.length !== expectedIds.length) return false
   const seen = new Set()
@@ -66,7 +64,6 @@ router.post('/', async (req, res) => {
     susScore = computeSusScore(sus)
   }
 
-  // Score each section
   let web = 0, container = 0, cloud = 0
   for (const { questionId, answer } of answers) {
     const correct = ANSWER_KEY[questionId]

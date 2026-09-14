@@ -1,42 +1,22 @@
 /**
- * @file server/lib/hintContext.js
- *
- * Per-flag context for the AI hint system (server/services/hint.service.js,
- * server/services/ai.service.js) — keyed by `challenges.slug` (one entry
- * per FLAG, not per module, since a hint is requested for the specific
- * flag a learner is stuck on).
- *
- * Each entry has THREE jobs:
+ * Per-flag context for the AI hint system, keyed by `challenges.slug` (one
+ * entry per flag, since a hint is requested for the specific flag a
+ * learner is stuck on). Each entry has three fields:
  *   - `vulnerability`   — fed to Claude as the mechanism being exploited.
- *   - `solutionSummary` — fed to Claude as ground truth so its hints stay
- *                          accurate, but it is instructed to never reveal
- *                          this directly (see ai.service.js's prompt).
+ *   - `solutionSummary` — fed to Claude as ground truth, but it is
+ *                          instructed to never reveal this directly.
  *   - `fallback[1|2|3]` — pre-written, tier-calibrated hints used verbatim
  *                          whenever the Claude call fails, times out, or no
  *                          ANTHROPIC_API_KEY is configured, so a live study
- *                          session never breaks. These are real hints,
- *                          authored to the same tier discipline Claude is
- *                          instructed to follow (1=conceptual nudge,
- *                          2=technique/direction, 3=near-explicit) — not
- *                          placeholders.
- *
- * Content here is derived from the same verified mechanics documented in
- * client/src/lib/solutions.js (every command in that file was run against
- * the real built challenges before being written down) — kept as a
- * separate, more concise server-side summary rather than importing that
- * client file directly, since this only needs the facts, not the full
- * copy-paste walkthrough UI content.
+ *                          session never breaks (1=conceptual nudge,
+ *                          2=technique/direction, 3=near-explicit).
  *
  * sqli-iam-exfil (Challenge 1's cloud-layer flag) is intentionally absent —
- * that layer isn't built yet (see solutions.js's "coming soon" section for
- * the same challenge), so there is no real mechanism to hint about yet.
- * ai.service.js falls back to a generic, honest message for any slug not
- * listed here.
+ * that layer isn't built yet. ai.service.js falls back to a generic,
+ * honest message for any slug not listed here.
  */
 
 export const HINT_CONTEXT = {
-  // ── Challenge 1 ──────────────────────────────────────────────────────────
-
   'sqli-login': {
     vulnerability:
       'The POST /login endpoint builds its SQL query by concatenating the ' +
@@ -155,8 +135,6 @@ export const HINT_CONTEXT = {
          'key and secret.',
     },
   },
-
-  // ── Challenge 2 ──────────────────────────────────────────────────────────
 
   'c2-error-disclosure': {
     vulnerability:

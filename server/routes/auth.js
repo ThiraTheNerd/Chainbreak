@@ -1,5 +1,3 @@
-/** @file server/routes/auth.js — /api/auth URL wiring. */
-
 import { Router } from 'express';
 import * as authController from '../controllers/auth.controller.js';
 import { authenticate } from '../middleware/auth.js';

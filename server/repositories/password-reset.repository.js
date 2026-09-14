@@ -1,5 +1,3 @@
-/** @file server/repositories/password-reset.repository.js — data-access for password_resets. Knows SQL only. */
-
 import pool from '../db/connection.js';
 
 export async function create({ userId, tokenHash, expiresAt }) {

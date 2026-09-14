@@ -1,10 +1,8 @@
 import pool from '../db/connection.js';
 import logger from '../utils/logger.js';
 
-// started_at previously relied on MySQL's DEFAULT CURRENT_TIMESTAMP (server session
-// time_zone) while completed_at was written from a JS Date (driver-local time_zone),
-// producing a consistent offset between the two. Writing both explicitly in UTC keeps
-// them on the same authority.
+// Written explicitly in UTC so started_at (server session time_zone) and
+// completed_at (driver-local time_zone) stay on the same authority.
 function toMysqlUtc(date) {
   return date.toISOString().slice(0, 19).replace('T', ' ');
 }

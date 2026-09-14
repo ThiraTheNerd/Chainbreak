@@ -1,8 +1,5 @@
-/** @file server/repositories/unlock.repository.js — solution-unlock persistence (pay-to-unlock, one-time). */
-
 import pool from '../db/connection.js';
 
-/** This user's unlock record for a module, or null if never unlocked. */
 export async function findUnlock(userId, dockerImage) {
   const [rows] = await pool.execute(
     `SELECT cost, unlocked_at FROM solution_unlocks WHERE user_id = ? AND docker_image = ? LIMIT 1`,
@@ -34,7 +31,6 @@ export async function recordUnlock({ userId, dockerImage, cost }) {
   }
 }
 
-/** Total XP this user has spent unlocking solutions, across all modules. */
 export async function totalSpentByUser(userId) {
   const [rows] = await pool.execute(
     `SELECT COALESCE(SUM(cost), 0) AS total FROM solution_unlocks WHERE user_id = ?`,
@@ -43,7 +39,6 @@ export async function totalSpentByUser(userId) {
   return Number(rows[0].total);
 }
 
-/** Per-user spend totals for every user who has unlocked at least one solution — for leaderboard/scoring. */
 export async function totalSpentByAllUsers() {
   const [rows] = await pool.execute(
     `SELECT user_id, SUM(cost) AS total FROM solution_unlocks GROUP BY user_id`

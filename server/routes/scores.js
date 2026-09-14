@@ -1,6 +1,3 @@
-
-/** @file server/routes/scores.js — /api/scores (auth required). */
- 
 import { Router } from 'express';
 import * as scoreController from '../controllers/score.controller.js';
 import { authenticate } from '../middleware/auth.js';

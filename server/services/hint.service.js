@@ -1,5 +1,3 @@
-/** @file server/services/hint.service.js — progressive AI hints, one-time-per-tier. */
-
 import * as challengeRepository from '../repositories/challenge.repository.js';
 import * as hintRepository from '../repositories/hint.repository.js';
 import * as submissionRepository from '../repositories/submission.repository.js';
@@ -22,7 +20,6 @@ async function resolveChallenge(challengeId) {
   return challenge;
 }
 
-/** This user's hint ladder for one challenge — all 3 tiers, revealed or not. */
 export async function getHintStatus(userId, challengeId) {
   const challenge = await resolveChallenge(challengeId);
   const existing = await hintRepository.findUnlocksForChallenge(userId, challengeId);

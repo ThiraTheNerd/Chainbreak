@@ -1,5 +1,3 @@
-/** @file server/controllers/score.controller.js */
- 
 import * as scoreService from '../services/score.service.js';
  
 export async function me(req, res) {

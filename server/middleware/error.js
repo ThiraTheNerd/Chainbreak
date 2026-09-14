@@ -1,6 +1,3 @@
-
-/** @file server/middleware/error.js — 404 catcher + central error handler. */
- 
 import logger from '../utils/logger.js';
 import { AppError } from '../utils/errors.js';
  

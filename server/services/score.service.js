@@ -1,6 +1,3 @@
-
-/** @file server/services/score.service.js — personal score + leaderboard. */
- 
 import * as submissionRepository from '../repositories/submission.repository.js';
  
 export async function getMyScore(userId) {

@@ -14,7 +14,6 @@ export default function initSocket(httpServer) {
   });
 
   io.use(async (socket, next) => {
-    // ── 1. Verify JWT ─────────────────────────────────────────────────────────
     const token =
       socket.handshake.auth?.token ||
       socket.handshake.headers.authorization?.replace('Bearer ', '');
@@ -28,9 +27,8 @@ export default function initSocket(httpServer) {
       return next(new Error('Invalid token'));
     }
 
-    socket.user = { id: decoded.sub, username: decoded.username, role: decoded.role }; // { id (from sub), role }
+    socket.user = { id: decoded.sub, username: decoded.username, role: decoded.role };
 
-    // ── 2. Verify session ─────────────────────────────────────────────────────
     const sessionId = socket.handshake.auth?.sessionId;
     if (!sessionId) return next(new Error('sessionId required'));
 
@@ -42,9 +40,7 @@ export default function initSocket(httpServer) {
 
     socket.session = session;
 
-    // Store all challenge IDs sent by the client so the terminal can
-    // try each one when scanning for flags. Falls back to the session's
-    // single challenge if the client sends nothing.
+    // Falls back to the session's single challenge if the client sends nothing.
     socket.challengeIds = Array.isArray(socket.handshake.auth?.challengeIds)
       ? socket.handshake.auth.challengeIds
       : [session.challenge_id]

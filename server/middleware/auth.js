@@ -1,5 +1,3 @@
-/** @file server/middleware/auth.js — verifies the Bearer JWT, attaches req.user. */
- 
 import * as authService from '../services/auth.service.js';
 import { UnauthorizedError } from '../utils/errors.js';
  

@@ -1,6 +1,3 @@
-
-/** @file server/routes/index.js — aggregates all route modules under /api. */
- 
 import { Router } from 'express';
 import authRoutes from './auth.js';
 import challengeRoutes from './challenges.js';

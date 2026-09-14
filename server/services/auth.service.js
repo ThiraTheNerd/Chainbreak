@@ -1,5 +1,3 @@
-/** @file server/services/auth.service.js — auth business logic (bcrypt + jwt). */
-
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
@@ -9,7 +7,7 @@ import * as userRepository from '../repositories/user.repository.js';
 import * as passwordResetRepository from '../repositories/password-reset.repository.js';
 import { ConflictError, UnauthorizedError, BadRequestError } from '../utils/errors.js';
 
-const RESET_TOKEN_TTL_MS = 30 * 60 * 1000; // 30 minutes
+const RESET_TOKEN_TTL_MS = 30 * 60 * 1000;
 
 const hashToken = (token) => crypto.createHash('sha256').update(token).digest('hex');
  

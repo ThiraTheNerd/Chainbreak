@@ -1,6 +1,3 @@
-
-/** @file server/controllers/auth.controller.js — thin HTTP adapter for auth. */
- 
 import * as authService from '../services/auth.service.js';
 import { BadRequestError } from '../utils/errors.js';
  

@@ -1,5 +1,4 @@
-// repositories/session.repository.js
-import pool from '../db/connection.js';   // default export IS the mysql2 pool
+import pool from '../db/connection.js';
 
 export async function findActiveByUserAndChallenge(userId, challengeId) {
   const [rows] = await pool.query(
@@ -28,37 +27,27 @@ export async function attachContainer(id, { containerId, workstationContainerId,
     [containerId, workstationContainerId, networkId, id],
   );
 }
-// --- NEW: the reaper's two hooks ---
+
 export async function findExpired() {
   const [rows] = await pool.query(
     `SELECT * FROM sessions WHERE status = 'running' AND expires_at <= NOW()`,
   );
-  return rows;   // snake_case rows — teardown() reads them directly
+  return rows;
 }
 
 /**
- * 'provisioning' rows past their OWN expiry — e.g. the server crashed
- * mid-`await dockerService.provision(...)`, before the catch block could
- * mark the row 'failed'. findExpired() above deliberately only looks at
- * 'running' rows, so a stuck 'provisioning' row is otherwise never
- * selected by anything, no matter how old it gets (confirmed by testing).
+ * 'provisioning' rows past their own expiry — e.g. the server crashed
+ * mid-provision before the catch block could mark the row 'failed'.
+ * findExpired() above only looks at 'running' rows, so a stuck
+ * 'provisioning' row is otherwise never selected by anything.
  *
- * The expiry comparison is done HERE, in SQL — deliberately mirroring
- * findExpired()'s own `expires_at <= NOW()` pattern — rather than in JS
- * against `new Date()`. That distinction matters: this project's mysql2
- * pool has no explicit `timezone` option, so it parses MySQL's naive
- * DATETIME strings as being in the Node process's LOCAL timezone before
- * converting to a JS Date. This MySQL server's own naive timestamps are
- * actually UTC (`time_zone=SYSTEM`, matching its container's UTC clock),
- * so on any host where Node's local TZ isn't ALSO UTC, a JS-side
- * `new Date(row.expires_at) > new Date()` comparison is silently wrong by
- * a full hour (verified live in this exact dev environment: Node reports
- * `getTimezoneOffset() === -60`, i.e. UTC+1) — which, in an earlier,
- * unmerged version of this reconciliation logic, caused a
- * genuinely-in-flight provisioning row (expiring 30 real minutes in the
- * future) to be misjudged as already stale. Comparing in SQL sidesteps
- * the client-side timezone question entirely, the same way findExpired()
- * already safely does.
+ * The expiry comparison is done in SQL rather than in JS against `new
+ * Date()`: this project's mysql2 pool has no explicit `timezone` option,
+ * so it parses MySQL's naive DATETIME strings as the Node process's LOCAL
+ * timezone before converting to a JS Date. This MySQL server's naive
+ * timestamps are actually UTC, so on a host where Node's local TZ isn't
+ * also UTC, a JS-side comparison is silently wrong by a full hour.
+ * Comparing in SQL sidesteps the timezone question entirely.
  */
 export async function findStaleProvisioning() {
   const [rows] = await pool.query(
@@ -67,14 +56,9 @@ export async function findStaleProvisioning() {
   return rows;
 }
 
-/**
- * Every session not yet in a terminal state — 'running' AND 'provisioning',
- * regardless of TTL. Used by reaper.service.js's reconcileStale() to check
- * each one directly against Docker (does its container still exist at
- * all?) rather than against any notion of time — so, unlike
- * findStaleProvisioning() above, there is no timezone-sensitive comparison
- * here to get wrong in the first place.
- */
+// Every session not yet in a terminal state, regardless of TTL — checked
+// by reaper.service.js's reconcileStale() directly against Docker rather
+// than against any notion of time.
 export async function findRunningOrProvisioning() {
   const [rows] = await pool.query(
     `SELECT * FROM sessions WHERE status IN ('running', 'provisioning')`,
@@ -97,10 +81,6 @@ export async function markFailed(id) {
   await pool.query(`UPDATE sessions SET status = 'failed' WHERE id = ?`, [id]);
 }
 
-/** Most recent session start for this user — folded into the Progress
- *  dashboard's "last active" stat alongside submission activity, so a
- *  learner who started a session but hasn't captured a flag yet still
- *  shows recent activity instead of "never". */
 export async function lastSessionAt(userId) {
   const [rows] = await pool.query(
     `SELECT MAX(created_at) AS last_session FROM sessions WHERE user_id = ?`,

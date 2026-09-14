@@ -1,15 +1,7 @@
-/** Allowed values, mirrored from the schema's ENUM / layer semantics. */
 const DIFFICULTIES = ['easy', 'medium', 'hard'];
 const LAYERS = [1, 2, 3]; // 1=OWASP web, 2=container escape, 3=AWS/LocalStack
 
-/**
- * Validate an admin-supplied challenge payload.
- * Collects ALL errors before returning — same fail-fast-with-full-list philosophy
- * as env.js, applied to request bodies.
- *
- * @param {object} body
- * @returns {{ valid: boolean, errors: string[], value?: object }}
- */
+// Collects all errors before returning, same as env.js's required-vars check.
 export function validateChallengePayload(body) {
   const errors = [];
   const {

@@ -1,8 +1,5 @@
-/** @file server/repositories/hint.repository.js — AI-hint persistence (one-time per tier). */
-
 import pool from '../db/connection.js';
 
-/** This user's unlock row for one specific (challenge, tier), or null. */
 export async function findUnlock(userId, challengeId, tier) {
   const [rows] = await pool.execute(
     `SELECT tier, cost, hint_text, source, created_at FROM hint_unlocks
@@ -12,7 +9,6 @@ export async function findUnlock(userId, challengeId, tier) {
   return rows[0] || null;
 }
 
-/** All of this user's revealed tiers for one challenge, in tier order. */
 export async function findUnlocksForChallenge(userId, challengeId) {
   const [rows] = await pool.execute(
     `SELECT tier, cost, hint_text, source, created_at FROM hint_unlocks
@@ -50,7 +46,6 @@ export async function recordUnlock({ userId, challengeId, tier, cost, hintText, 
   }
 }
 
-/** Total XP this user has spent revealing hints, across all challenges. */
 export async function totalSpentByUser(userId) {
   const [rows] = await pool.execute(
     `SELECT COALESCE(SUM(cost), 0) AS total FROM hint_unlocks WHERE user_id = ?`,
@@ -59,8 +54,6 @@ export async function totalSpentByUser(userId) {
   return Number(rows[0].total);
 }
 
-/** This user's hint reveals grouped by tier — count + spend per tier, for
- *  the Progress dashboard's hint-usage breakdown. */
 export async function tierBreakdownForUser(userId) {
   const [rows] = await pool.execute(
     `SELECT tier, COUNT(*) AS count, COALESCE(SUM(cost), 0) AS spent
@@ -70,7 +63,6 @@ export async function tierBreakdownForUser(userId) {
   return rows.map((r) => ({ tier: r.tier, count: Number(r.count), spent: Number(r.spent) }));
 }
 
-/** Per-user spend totals for everyone who has revealed at least one hint — for scoring. */
 export async function totalSpentByAllUsers() {
   const [rows] = await pool.execute(
     `SELECT user_id, SUM(cost) AS total FROM hint_unlocks GROUP BY user_id`
@@ -78,11 +70,7 @@ export async function totalSpentByAllUsers() {
   return rows.map((r) => ({ userId: r.user_id, total: Number(r.total) }));
 }
 
-/**
- * Research export: every hint reveal, across every user — the raw data for
- * "hint depth vs learning outcome" analysis. Admin-only at the route level
- * (see server/routes/hints.js).
- */
+// Every hint reveal across every user — admin-only at the route level.
 export async function allHintReveals() {
   const [rows] = await pool.execute(
     `SELECT h.user_id, u.username, h.challenge_id, c.slug, c.title,

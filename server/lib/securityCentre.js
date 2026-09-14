@@ -37,9 +37,9 @@ const ALERT_MAPPINGS = [
 // it prevents the scan feature from being abused to reach arbitrary internal
 // hosts (SSRF). Only these three known targets may ever be scanned.
 const ALLOWED_SCAN_TARGETS = new Map([
-  ['nginx',           config.security.zapTarget],          // platform (via reverse proxy)
-  ['web-challenge-1', 'http://web-challenge-1:3000'],      // challenge 1 target (direct)
-  ['web-challenge-2', 'http://web-challenge-2:3000'],      // challenge 2 target (direct)
+  ['nginx',           config.security.zapTarget],
+  ['web-challenge-1', 'http://web-challenge-1:3000'],
+  ['web-challenge-2', 'http://web-challenge-2:3000'],
 ]);
 
 export function mapAlert(alertName) {

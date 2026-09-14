@@ -1,5 +1,3 @@
-/** @file server/controllers/flag.controller.js — submit a flag for a challenge. */
- 
 import * as flagService from '../services/flag.service.js';
 import { BadRequestError } from '../utils/errors.js';
  

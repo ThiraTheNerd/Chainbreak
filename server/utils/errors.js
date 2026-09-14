@@ -1,5 +1,3 @@
-/** @file server/utils/errors.js — operational error hierarchy; each carries an HTTP statusCode. */
- 
 export class AppError extends Error {
   constructor(message, statusCode = 500, options = {}) {
     super(message, options);

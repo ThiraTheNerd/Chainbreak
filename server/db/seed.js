@@ -1,5 +1,3 @@
-/** @file server/db/seed.js — populates users and challenges. */
-
 import bcrypt from 'bcrypt';
 import pool from './connection.js';
 

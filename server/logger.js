@@ -1,8 +1,3 @@
-// server/utils/logger.js
-// Simple structured logger — timestamps every line so you can track
-// exactly when each event happened in the server lifecycle.
-// Used throughout the server so all log output has a consistent format.
-
 const isDev = process.env.NODE_ENV !== 'production';
 
 function formatMessage(level, message, extra) {

@@ -4,7 +4,7 @@ import * as repository from '../repositories/security.repository.js';
 import { calculateScore, evaluateFindings, mapAlert, normaliseRisk, OWASP_CATEGORIES, GROUND_TRUTH, validateTarget, zapUrl } from '../lib/securityCentre.js';
 import { ValidationError } from '../utils/errors.js';
 import logger from '../utils/logger.js';
-import { PLATFORM, CHALLENGE1, CHALLENGE2 } from '../data/ground-truth-routes.js';
+import { PLATFORM, CHALLENGE1, CHALLENGE2 } from '../data/scripts/ground-truth-routes.js';
 
 const ALLOWED_TYPES = new Set(['passive', 'full', 'api']);
 const SPIDER_TIMEOUT_MS = 10 * 60 * 1000;
@@ -12,11 +12,6 @@ const ACTIVE_SCAN_TIMEOUT_MS = 30 * 60 * 1000;
 
 
 async function zapRequest(path, params = {}) {
-
-    // console.log('[scan] key:', Boolean(config.security?.zapApiKey),
-    //     'len:', config.security?.zapApiKey?.length,
-    //     'url:', config.security?.zapUrl,
-    //     'target:', config.security?.zapTarget);
   if (!config.security.zapApiKey) throw new Error('ZAP_API_KEY is not configured');
   let response;
   try {
@@ -43,11 +38,10 @@ async function zapRequest(path, params = {}) {
 function counts(findings) {
   return findings.reduce((result, finding) => { result[finding.risk] = (result[finding.risk] || 0) + 1; return result; }, {});
 }
-// Add near the other helpers in security.service.js
 
 async function configureAuthHeader(token) {
   if (!token) return;
-  // Remove any prior rule so re-runs don't stack duplicates
+  // Removes any prior rule so re-runs don't stack duplicates.
   try {
     await zapRequest('replacer/action/removeRule', { description: 'chainbreak-auth' });
   } catch { /* no existing rule — fine */ }
@@ -86,8 +80,8 @@ function routesForTarget(target) {
   return [];
 }
 
-// Primes ZAP's site tree with known routes for this specific target — including
-// API endpoints that aren't reachable via link-following — before spidering.
+// Primes ZAP's site tree with API endpoints for this target that aren't
+// reachable via link-following, before spidering.
 async function seedKnownRoutes(scanId, target) {
   const routes = routesForTarget(target);
   for (const route of routes) {
@@ -119,15 +113,13 @@ async function runScan(scanId, scanType, target, authToken) {
   try {
     logger.info(`[security.service] scan ${scanId} starting against target ${target}`);
     await repository.updateScan(scanId, { status: 'scanning', current_phase: scanType === 'passive' ? 'Passive analysis' : 'Spider' });
-    // 1. Safely handle newSession conflicts
     try {
       await zapRequest('core/action/newSession', { name: `chainbreak-${scanId}`, overwrite: 'true' });
     } catch (err) {
       if (!err.message?.includes('already_exists')) throw err;
     }
-    // A context is required for the AJAX spider's inScope check below, and will
-    // also be needed later for authenticated scanning.
-    // 2. Safely handle Context creation
+    // A context is required for the AJAX spider's inScope check below, and
+    // will also be needed later for authenticated scanning.
     const contexts = await zapRequest('context/view/contextList');
     if (!String(contexts.contextList || '').includes('chainbreak')) {
       try {
@@ -136,13 +128,11 @@ async function runScan(scanId, scanType, target, authToken) {
         if (!err.message?.includes('already_exists')) throw err;
       }
     }
-    // 3. Safely handle includeInContext conflicts
     try {
       await zapRequest('context/action/includeInContext', { contextName: 'chainbreak', regex: `${target}.*` });
     } catch (err) {
       if (!err.message?.includes('already_exists')) throw err;
     }
-    // inside runScan, after the includeInContext block, before spider/action/scan:
     if (authToken) await configureAuthHeader(authToken);
     await seedKnownRoutes(scanId, target);
     // maxChildren: 0 means unlimited children per node.
@@ -158,18 +148,8 @@ async function runScan(scanId, scanType, target, authToken) {
     }
     const spiderResults = await zapRequest('spider/view/results', { scanId: spiderId });
     logger.info(`[security.service] traditional spider found ${(spiderResults.results || []).length} URL(s) for scan ${scanId}`);
-    // AJAX spider drives a headless browser and executes JS, so it can discover
-    // routes in the React SPA that the traditional link-following spider misses.
-    // The two are complementary and both feed the same ZAP site tree.
-    // try {
-    //   logger.info(`[security.service] Starting AJAX spider for scan ${scanId}...`);
-    //   // await runAjaxSpider(scanId, target);
-    // } catch (ajaxError) {
-    //   logger.warn(`[security.service] AJAX spider failed or container OOMed for scan ${scanId}, skipping to Active Scan:`, ajaxError.message);
-    //   await repository.updateScan(scanId, { current_phase: 'AJAX spider (skipped/failed)' });
-    // }
-    // Total site-tree URLs, not just ones that produced an alert — the correct
-    // signal for "did the scanner ever reach the target" (see endpointsFound below).
+    // Total site-tree URLs, not just ones that produced an alert — the
+    // correct signal for "did the scanner ever reach the target".
     let urlsDiscovered;
     try {
       const siteUrls = await zapRequest('core/view/urls', { baseurl: target });
