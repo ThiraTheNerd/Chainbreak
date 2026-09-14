@@ -26,7 +26,6 @@
   <img src="docs/screenshots/dashboard.png" alt="ChainBreak dashboard screenshot" width="850">
 </p>
 
-
 ---
 
 ## 📖 About

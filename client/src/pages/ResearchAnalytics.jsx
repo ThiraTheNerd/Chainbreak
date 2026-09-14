@@ -98,11 +98,6 @@ export function ResearchAnalytics() {
               <div className="space-y-4">
                 <HintDepthChart hints={hints} />
                 <HintSourceBreakdown hints={hints} />
-                <p className="text-text-3 text-[11px] border-t border-border pt-3">
-                  Descriptive / exploratory only — this study has no hint/no-hint control group and a
-                  small sample, so usage patterns here are not evidence that hints caused, helped, or
-                  hurt learning.
-                </p>
               </div>
             )
           }
