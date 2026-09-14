@@ -131,7 +131,7 @@ export function Assessment() {
                 onClick={() => {
                   if (locked) {
                     toast({
-                      variant: 'destructive',
+                      variant: 'warning',
                       title: 'Pre-assessment required',
                       description: 'Complete the pre-assessment before starting the post-assessment.',
                     })
@@ -143,14 +143,14 @@ export function Assessment() {
                 className={`w-60 p-5 bg-surface border border-border rounded-xl
                            text-left transition-all group
                            ${locked
-                             ? 'opacity-50 cursor-not-allowed'
-                             : 'hover:border-accent hover:bg-accent/5'
+                             ? 'border-yellow-500/30 bg-yellow-500/5 cursor-not-allowed'
+                             : 'bg-surface border-border hover:border-accent hover:bg-accent/5'
                            }`}
               >
                 <p className={`text-text-1 font-medium mb-1 flex items-center gap-1.5
                                ${!locked && 'group-hover:text-accent'}`}>
                   {t.label}
-                  {locked && <Lock size={13} className="text-text-3" />}
+                  {locked && <Lock size={13} className="text-yellow-400" />}
                 </p>
                 <p className="text-text-3 text-xs">{t.sub}</p>
               </button>

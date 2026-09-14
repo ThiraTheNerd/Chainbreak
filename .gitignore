@@ -47,7 +47,7 @@ data/scripts/*
 scripts/
 commit_history.sh
 backup-before-scan.sql
-docs/
+
 
 
 

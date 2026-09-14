@@ -67,9 +67,9 @@ export function ChallengeCard({ module }) {
   const handleStart = () => {
     if (!hasPreAssessment) {
       toast({
-        variant: 'destructive',
+        variant: 'warning',
         title: 'Pre-assessment required',
-        description: 'Complete the pre-assessment to begin challenges.',
+        description: 'Complete the pre-assessment before starting challenges.',
       })
       return
     }

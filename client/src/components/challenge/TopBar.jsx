@@ -1,11 +1,12 @@
 import { Link2Off, ChevronRight, Lightbulb, Clock } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { StagesStepper } from './StagesStepper'
-import { useCountdown }  from '@/hooks/useCountdown'
 import { useScores }     from '@/hooks/useScores'
 
-export function TopBar({ challenge, stage, expiresAt, hintsUsed = 0 }) {
-  const { formatted, urgent } = useCountdown(expiresAt)
+// Countdown itself is owned by ChallengePage (it also needs `expired` to
+// close the session and redirect) and passed down as `formatted`/`urgent`
+// so there's a single ticking timer, not two independent ones.
+export function TopBar({ challenge, stage, formatted, urgent, hintsUsed = 0 }) {
   const { data: scoreData }   = useScores()
   const score = scoreData?.score || 0
 
@@ -40,7 +41,7 @@ export function TopBar({ challenge, stage, expiresAt, hintsUsed = 0 }) {
         <div className={`flex items-center gap-1.5 font-mono text-sm
                          ${urgent ? 'text-danger' : 'text-text-2'}`}>
           <Clock size={14} />
-          {expiresAt ? formatted : '--:--'}
+          {formatted || '--:--'}
         </div>
         <button className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg
                            border border-warning/30 bg-warning/10

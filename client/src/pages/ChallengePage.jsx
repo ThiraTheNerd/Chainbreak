@@ -4,11 +4,14 @@ import { useQueryClient }      from '@tanstack/react-query'
 import { GripHorizontal }      from 'lucide-react'
 import { useAuth }             from '@/hooks/useAuth'
 import { useChallengeModule }  from '@/hooks/useChallengeModule'
+import { useCountdown }        from '@/hooks/useCountdown'
+import { useToast }            from '@/hooks/use-toast'
 import { TopBar }              from '@/components/challenge/TopBar'
 import { TerminalPane }        from '@/components/terminal/Terminal'
 import { KillChainGraph }      from '@/components/killchain/KillChainGraph'
 import { FlagStatusRow }       from '@/components/challenge/FlagStatusRow'
 import { MissionBrief }        from '@/components/challenge/MissionBrief'
+import api                     from '@/services/api'
 
 const LAYER_KEY = { owasp: 'web', docker: 'container', aws: 'cloud' }
 
@@ -26,6 +29,42 @@ export function ChallengePage() {
 
   const expiresAt = sessionStorage.getItem(`cb_session_${sessionId}_expires`)
     || new Date(Date.now() + 60 * 60 * 1000).toISOString()
+
+  const { formatted: timeFormatted, urgent: timeUrgent, expired: sessionTimedOut } = useCountdown(expiresAt)
+  const { toast } = useToast()
+  const [sessionClosed, setSessionClosed] = useState(false)
+  const warnedRef = useRef(false)
+  const closingRef = useRef(false)
+
+  // Fires once when the countdown crosses into its last 5 minutes.
+  useEffect(() => {
+    if (timeUrgent && !sessionTimedOut && !warnedRef.current) {
+      warnedRef.current = true
+      toast({
+        variant: 'warning',
+        title: 'Session ending soon',
+        description: 'Less than 5 minutes remain on this challenge session.',
+      })
+    }
+  }, [timeUrgent, sessionTimedOut, toast])
+
+  // Fires once when the countdown hits zero — tears down the workstation
+  // container server-side and boots the learner back to the dashboard.
+  useEffect(() => {
+    if (!sessionTimedOut || closingRef.current) return
+    closingRef.current = true
+    toast({
+      variant: 'destructive',
+      title: 'Session timed out',
+      description: 'Your challenge session has ended. Returning to the dashboard.',
+    })
+    api.delete(`/sessions/challenges/${id}/session`)
+      .catch(() => {})
+      .finally(() => {
+        sessionStorage.removeItem(`cb_session_${sessionId}_expires`)
+        setSessionClosed(true)
+      })
+  }, [sessionTimedOut, id, sessionId, toast])
 
   // Keyed by challenge id, not layer — a layer can hold more than one flag,
   // so a single per-layer slot would lose one.
@@ -132,6 +171,7 @@ export function ChallengePage() {
 
   if (!isAuthenticated) return <Navigate to="/login" replace />
   if (!sessionId) return <Navigate to="/dashboard" replace />
+  if (sessionClosed) return <Navigate to="/dashboard" replace />
 
   const challenge   = moduleData?.entry
   const challengeIds = moduleData?.allIds || []
@@ -142,7 +182,8 @@ export function ChallengePage() {
       <TopBar
         challenge={challenge}
         stage={stage}
-        expiresAt={expiresAt}
+        formatted={timeFormatted}
+        urgent={timeUrgent}
       />
 
       <div className="flex-1 flex overflow-hidden">
